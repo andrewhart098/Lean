@@ -26,6 +26,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
+using Akka.Actor;
 
 namespace QuantConnect.Lean.Engine 
 {
@@ -40,6 +41,7 @@ namespace QuantConnect.Lean.Engine
         private readonly bool _liveMode;
         private readonly LeanEngineSystemHandlers _systemHandlers;
         private readonly LeanEngineAlgorithmHandlers _algorithmHandlers;
+        public static ActorSystem _actorSystem;
 
         /// <summary>
         /// Gets the configured system handlers for this engine instance
@@ -68,6 +70,21 @@ namespace QuantConnect.Lean.Engine
             _liveMode = liveMode;
             _systemHandlers = systemHandlers;
             _algorithmHandlers = algorithmHandlers;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Engine"/> class using the specified handlers WITH AKKA
+        /// </summary>
+        /// <param name="systemHandlers">The system handlers for controlling acquisition of jobs, messaging, and api calls</param>
+        /// <param name="algorithmHandlers">The algorithm handlers for managing algorithm initialization, data, results, transaction, and real time events</param>
+        /// <param name="liveMode">True when running in live mode, false otherwises</param>
+        /// <param name="actorSystem">Actor system to be used with the algorithm</param>
+        public Engine(LeanEngineSystemHandlers systemHandlers, LeanEngineAlgorithmHandlers algorithmHandlers, bool liveMode, ActorSystem actorSystem)
+        {
+            _liveMode = liveMode;
+            _systemHandlers = systemHandlers;
+            _algorithmHandlers = algorithmHandlers;
+            _actorSystem = actorSystem;
         }
 
         /// <summary>
@@ -135,7 +152,7 @@ namespace QuantConnect.Lean.Engine
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, _systemHandlers.Api);
                     
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
-                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime);
+                    initializeComplete = _algorithmHandlers.Setup.Setup(algorithm, brokerage, job, _algorithmHandlers.Results, _algorithmHandlers.Transactions, _algorithmHandlers.RealTime, _actorSystem);
 
                     // set this again now that we've actually added securities
                     _algorithmHandlers.Results.SetAlgorithm(algorithm);

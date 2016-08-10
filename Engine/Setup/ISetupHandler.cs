@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using Akka.Actor;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.RealTime;
 using QuantConnect.Lean.Engine.Results;
@@ -100,5 +101,18 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="realTimeHandler">The configured real time handler</param>
         /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
         bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler);
+
+        /// <summary>
+        /// Primary entry point to setup a new algorithm and AKKA
+        /// </summary>
+        /// <param name="algorithm">Algorithm instance</param>
+        /// <param name="brokerage">New brokerage output instance</param>
+        /// <param name="job">Algorithm job task</param>
+        /// <param name="resultHandler">The configured result handler</param>
+        /// <param name="transactionHandler">The configurated transaction handler</param>
+        /// <param name="realTimeHandler">The configured real time handler</param>
+        /// <param name="actorSystem">The actor system to expose to the QCAlgothrithm</param>
+        /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
+        bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler, ActorSystem actorSystem);
     }
 }

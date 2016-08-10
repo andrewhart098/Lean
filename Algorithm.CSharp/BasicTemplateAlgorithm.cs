@@ -13,7 +13,15 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using Akka.Actor;
+using Akka.Util;
+using QuantConnect.Algorithm.CSharp.Akka.Actors;
 using QuantConnect.Data;
+using Microsoft.Bcl.Async;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -23,17 +31,31 @@ namespace QuantConnect.Algorithm.CSharp
     public class BasicTemplateAlgorithm : QCAlgorithm
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-        
+
+        public static IActorRef LogActor;
+        public static IActorRef TradeActor;
+        public static IActorRef NewswireActor;
+
+        public List<string> SymbolsToBuys = new List<string>();
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
-        public override void Initialize()
+        public override void Initialize(ActorSystem actorSystem)
         {
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
-            // Find more symbols here: http://quantconnect.com/data
             AddEquity("SPY", Resolution.Second);
+            File.Delete(@".\..\..\..\Logs.txt");
+            // make our first actors!
+            LogActor = actorSystem.ActorOf(Props.Create(() => new LogActor()),
+               "logActor");
+
+            TradeActor = actorSystem.ActorOf(Props.Create(() => new TradeActor()),
+               "tradeActor");
+
+            NewswireActor = actorSystem.ActorOf(Props.Create(() => new NewswireActor(TradeActor)),
+                "newswireActor");
         }
 
         /// <summary>
@@ -42,7 +64,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            if (!Portfolio.Invested)
+            LogActor.Tell(data.Time);
+            LogActor.Tell(Securities[_spy]);
+            NewswireActor.Tell(Securities[_spy]);
+
+            var task = TaskEx.RunEx(async () => await TradeActor.Ask<bool>(_spy, TimeSpan.FromSeconds(1)));
+            var result = task.WaitAndUnwrapException();
+
+            if (false)
             {
                 SetHoldings(_spy, 1);
                 Debug("Purchased Stock");

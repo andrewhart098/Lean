@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Akka.Actor;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -348,6 +349,12 @@ namespace QuantConnect.Lean.Engine.Setup
             }
 
             return Errors.Count == 0;
+        }
+
+        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket job, IResultHandler resultHandler,
+            ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler, ActorSystem actorSystem)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

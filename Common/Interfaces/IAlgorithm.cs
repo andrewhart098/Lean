@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using Akka.Actor;
 using NodaTime;
 using QuantConnect.Benchmarks;
 using QuantConnect.Brokerages;
@@ -279,10 +280,25 @@ namespace QuantConnect.Interfaces
             get;
         }
 
+        ///// <summary>
+        ///// Gets and Sets the ActorSystem
+        ///// </summary>
+        //ActorSystem ActorSystem
+        //{
+        //    get;
+        //    set;
+        //}
+
         /// <summary>
         /// Initialise the Algorithm and Prepare Required Data:
         /// </summary>
         void Initialize();
+
+
+        /// <summary>
+        /// Initialise the Algorithm and Prepare Required Data:
+        /// </summary>
+        void Initialize(ActorSystem actorSystem);
 
         /// <summary>
         /// Called by setup handlers after Initialize and allows the algorithm a chance to organize

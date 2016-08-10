@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Akka.Actor;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
@@ -149,6 +150,63 @@ namespace QuantConnect.Lean.Engine.Setup
                     backtestJob.UserId = baseJob.UserId;
                     backtestJob.Channel = baseJob.Channel;
        
+                    //Backtest Specific Parameters:
+                    StartingDate = backtestJob.PeriodStart;
+                    StartingPortfolioValue = algorithm.Portfolio.Cash;
+                }
+                else
+                {
+                    throw new Exception("The ConsoleSetupHandler is for backtests only. Use the BrokerageSetupHandler.");
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                Errors.Add("Failed to initialize algorithm: Initialize(): " + err.Message);
+            }
+
+            if (Errors.Count == 0)
+            {
+                initializeComplete = true;
+            }
+
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+            algorithm.PostInitialize();
+
+            return initializeComplete;
+        }
+
+        public bool Setup(IAlgorithm algorithm, IBrokerage brokerage, AlgorithmNodePacket baseJob, IResultHandler resultHandler, ITransactionHandler transactionHandler, IRealTimeHandler realTimeHandler, ActorSystem actorSystem)
+        {
+            var initializeComplete = false;
+
+            try
+            {
+                //Set common variables for console programs:
+
+                if (baseJob.Type == PacketType.BacktestNode)
+                {
+                    var backtestJob = baseJob as BacktestNodePacket;
+
+                    algorithm.SetMaximumOrders(int.MaxValue);
+                    // set our parameters
+                    algorithm.SetParameters(baseJob.Parameters);
+                    algorithm.SetLiveMode(false);
+                    //Set the source impl for the event scheduling
+                    algorithm.Schedule.SetEventSchedule(realTimeHandler);
+                    //Setup Base Algorithm:
+                    algorithm.Initialize(actorSystem);
+                    //Set the time frontier of the algorithm
+                    algorithm.SetDateTime(algorithm.StartDate.ConvertToUtc(algorithm.TimeZone));
+
+                    //Construct the backtest job packet:
+                    backtestJob.PeriodStart = algorithm.StartDate;
+                    backtestJob.PeriodFinish = algorithm.EndDate;
+                    backtestJob.BacktestId = algorithm.GetType().Name;
+                    backtestJob.Type = PacketType.BacktestNode;
+                    backtestJob.UserId = baseJob.UserId;
+                    backtestJob.Channel = baseJob.Channel;
+
                     //Backtest Specific Parameters:
                     StartingDate = backtestJob.PeriodStart;
                     StartingPortfolioValue = algorithm.Portfolio.Cash;

@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Composition;
 using System.Threading;
 using System.Windows.Forms;
+using Akka.Actor;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
@@ -30,7 +31,7 @@ namespace QuantConnect.Lean.Launcher
     public class Program
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
-
+        public static ActorSystem _actorSystem;
         static void Main(string[] args)
         {
             //Initialize:
@@ -105,6 +106,8 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
             if (job is LiveNodePacket) Log.Trace("         Brokerage:    " + ((LiveNodePacket)job).Brokerage);
 
+            _actorSystem = ActorSystem.Create("MyActorSystem");
+
             // if the job version doesn't match this instance version then we can't process it
             // we also don't want to reprocess redelivered jobs
             if (VersionHelper.IsNotEqualVersion(job.Version) || job.Redelivered)
@@ -121,8 +124,10 @@ namespace QuantConnect.Lean.Launcher
 
             try
             {
-                var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode);
+                var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode,
+                    _actorSystem);
                 engine.Run(job, assemblyPath);
+                _actorSystem.Terminate();
             }
             finally
             {

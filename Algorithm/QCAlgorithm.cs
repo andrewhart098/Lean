@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Akka.Actor;
 using NodaTime;
 using NodaTime.TimeZones;
 using QuantConnect.Benchmarks;
@@ -430,6 +431,11 @@ namespace QuantConnect.Algorithm
         public virtual void Initialize()
         {
             //Setup Required Data
+            throw new NotImplementedException("Please override the Initialize() method");
+        }
+
+        public virtual void Initialize(ActorSystem actorSystem)
+        {
             throw new NotImplementedException("Please override the Initialize() method");
         }
 
