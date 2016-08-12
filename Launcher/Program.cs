@@ -106,6 +106,7 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
             if (job is LiveNodePacket) Log.Trace("         Brokerage:    " + ((LiveNodePacket)job).Brokerage);
 
+            // Create the actor system
             _actorSystem = ActorSystem.Create("MyActorSystem");
 
             // if the job version doesn't match this instance version then we can't process it
@@ -127,6 +128,7 @@ namespace QuantConnect.Lean.Launcher
                 var engine = new Engine.Engine(leanEngineSystemHandlers, leanEngineAlgorithmHandlers, liveMode,
                     _actorSystem);
                 engine.Run(job, assemblyPath);
+                // Terminate the actor system after the engine is finished running the job
                 _actorSystem.Terminate();
             }
             finally

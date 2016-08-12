@@ -62,14 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddRemoveSecurityRegressionAlgorithm.cs" />
-    <Compile Include="Akka\Actors\ConsoleReaderActor.cs" />
     <Compile Include="Akka\Actors\LogActor.cs" />
     <Compile Include="Akka\Actors\NewswireActor.cs" />
     <Compile Include="Akka\Actors\TradeActor.cs" />
-    <Compile Include="Akka\Messages\AlgoMessage.cs" />
-    <Compile Include="Akka\Messages\BuyMessage.cs" />
-    <Compile Include="Akka\Messages\Messages.cs" />
-    <Compile Include="Akka\News.cs" />
     <Compile Include="PortfolioOptimizationNumericsAlgorithm.cs" />
     <Compile Include="DailyFxAlgorithm.cs" />
     <Compile Include="BasicTemplateForexAlgorithm.cs" />

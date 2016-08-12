@@ -13,11 +13,9 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
 using System.IO;
 using Akka.Actor;
 using QuantConnect.Algorithm.CSharp.Akka.Actors;
-using QuantConnect.Algorithm.CSharp.Akka.Messages;
 using QuantConnect.Data;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,29 +27,36 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private Symbol _spy = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
+        // Static references to the actors in the system
         public static IActorRef LogActor;
         public static IActorRef TradeActor;
         public static IActorRef NewswireActor;
 
-        public List<string> SymbolsToBuys = new List<string>();
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// This method is a modified version of the Initilize method that can accept a reference to the actor system.
         /// </summary>
+        /// <param name="actorSystem">A heavyweight structure that will allocate 1...N Threads, so create one per logical application.</param>
         public override void Initialize(ActorSystem actorSystem)
         {
             SetStartDate(2013, 10, 07);  //Set Start Date
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             AddEquity("SPY", Resolution.Second);
+
+            // This file serves as a simple log file that the log actor will use
             File.Delete(@".\..\..\..\Logs.txt");
-            // make our first actors!
+            
+            // Create an actor that can log 
             LogActor = actorSystem.ActorOf(Props.Create(() => new LogActor()),
                "logActor");
 
+            // Create actor that can trade - i.e. call Buy() in this class
             TradeActor = actorSystem.ActorOf(Props.Create(() => new TradeActor()),
                "tradeActor");
 
-            NewswireActor = actorSystem.ActorOf(Props.Create(() => new NewswireActor(TradeActor)),
+            // Create actor that checks for news about stocks in 
+            NewswireActor = actorSystem.ActorOf(Props.Create(() => new NewswireActor(TradeActor, LogActor)),
                 "newswireActor");
         }
 
@@ -61,17 +66,17 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
-            var sec = Securities[_spy];
-            var message = new AlgoMessage(this, sec, data.Time);
-
-            NewswireActor.Tell(message);
+            // Check the newswire actor for good news
+            NewswireActor.Tell(new UpdateMessage(this, Securities[_spy], data.Time));
         }
 
+        /// <summary>
+        /// This method is called from the Trading actor
+        /// </summary>
         public void Buy()
         {
             SetHoldings(_spy, 1);
             Debug("Purchased Stock");
-
             LogActor.Tell("Purchased Stock");
         }
     }

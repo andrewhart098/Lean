@@ -9,6 +9,10 @@ using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp.Akka.Actors
 {
+    /// <summary>
+    /// An actor for writing various types to a log file.
+    /// This actor can handle strings, DateTimes and Securities.
+    /// </summary>
     public class LogActor: ReceiveActor 
     {
         public LogActor()
