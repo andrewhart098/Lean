@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Akka.Actor;
-using QuantConnect.Algorithm.CSharp.Akka.Messages;
+﻿using Akka.Actor;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp.Akka.Actors
