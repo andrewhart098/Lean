@@ -77,13 +77,13 @@ namespace QuantConnect.Algorithm.CSharp.Akka.Actors
     }
 
     // Class to represent the "News" which is an array of Stories.
-    internal class News
+    public class News
     {
-        public IEnumerable<Story> Stories { get; internal set; }
+        public IEnumerable<Story> Stories { get; set; }
     }
 
     // An story about a security.
-    internal class Story
+    public class Story
     {
         public DateTime NewsDateTime { get; set; }
         public string Symbol { get; set; }
