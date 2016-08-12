@@ -9,10 +9,13 @@ namespace QuantConnect.Algorithm.CSharp.Akka.Actors
 {
     public class NewswireActor : ReceiveActor
     {
-        public NewswireActor(IActorRef tradeActor)
+        public NewswireActor(IActorRef tradeActor, IActorRef logActor)
         {
             Receive<AlgoMessage>(am =>
             {
+                logActor.Tell(am.Time);
+                logActor.Tell(am.Security);
+
                 if (HasGoodNews(am))
                 {
                     tradeActor.Tell(new BuyMessage(am.Algo, am.Security, true));

@@ -64,9 +64,6 @@ namespace QuantConnect.Algorithm.CSharp
             var sec = Securities[_spy];
             var message = new AlgoMessage(this, sec, data.Time);
 
-            LogActor.Tell(data.Time);
-            LogActor.Tell(sec);
-
             NewswireActor.Tell(message);
         }
 
