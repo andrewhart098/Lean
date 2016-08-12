@@ -43,9 +43,6 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             AddEquity("SPY", Resolution.Second);
-
-            // This file serves as a simple log file that the log actor will use
-            File.Delete(@".\..\..\..\Logs.txt");
             
             // Create an actor that can log 
             LogActor = actorSystem.ActorOf(Props.Create(() => new LogActor()),

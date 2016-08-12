@@ -25,6 +25,9 @@ using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
+using Akka.Logger.Serilog;
+using Log = QuantConnect.Logging.Log;
+using Serilog;
 
 namespace QuantConnect.Lean.Launcher
 {
@@ -106,6 +109,11 @@ namespace QuantConnect.Lean.Launcher
             Log.Trace("         Commands:     " + leanEngineAlgorithmHandlers.CommandQueue.GetType().FullName);
             if (job is LiveNodePacket) Log.Trace("         Brokerage:    " + ((LiveNodePacket)job).Brokerage);
 
+            // Configure the global Log.Logger
+            ILogger logger = new LoggerConfiguration()
+                                .WriteTo.File(@".\..\..\..\Logs.txt")
+                                .CreateLogger();
+            Serilog.Log.Logger = logger;
             // Create the actor system
             _actorSystem = ActorSystem.Create("MyActorSystem");
 

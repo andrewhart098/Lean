@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using QuantConnect.Securities;
@@ -17,28 +13,32 @@ namespace QuantConnect.Algorithm.CSharp.Akka.Actors
     {
         public LogActor()
         {
+            var log = Context.GetLogger();
             Receive<string>(str =>
             {
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@".\..\..\..\Logs.txt", true))
-                {
-                    file.WriteLine(str.ToString());
-                }
+                log.Info("The value is {0}", str);
+                //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@".\..\..\..\Logs.txt", true))
+                //{
+                //    file.WriteLine(str.ToString());
+                //}
             });
 
             Receive<DateTime>(dt =>
             {
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@".\..\..\..\Logs.txt", true))
-                {
-                    file.WriteLine(dt);
-                }
+                log.Info("The string is {0}", dt);
+                //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@".\..\..\..\Logs.txt", true))
+                //{
+                //    file.WriteLine(dt);
+                //}
             });
 
             Receive<Security>(s =>
             {
-                using (System.IO.StreamWriter file = new System.IO.StreamWriter(@".\..\..\..\Logs.txt", true))
-                {
-                    file.WriteLine(s.Price);
-                }
+                log.Info("The equity {symbol} cost {price}", s.Symbol, s.Price);
+                //using (System.IO.StreamWriter file = new System.IO.StreamWriter(@".\..\..\..\Logs.txt", true))
+                //{
+                //    file.WriteLine(s.Price);
+                //}
             });
         }
     }
