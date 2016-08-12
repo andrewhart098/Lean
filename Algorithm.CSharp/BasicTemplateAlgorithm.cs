@@ -13,15 +13,12 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using Akka.Actor;
-using Akka.Util;
 using QuantConnect.Algorithm.CSharp.Akka.Actors;
+using QuantConnect.Algorithm.CSharp.Akka.Messages;
 using QuantConnect.Data;
-using Microsoft.Bcl.Async;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -64,18 +61,21 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice data)
         {
+            var sec = Securities[_spy];
+            var message = new AlgoMessage(this, sec, data.Time);
+
             LogActor.Tell(data.Time);
-            LogActor.Tell(Securities[_spy]);
-            NewswireActor.Tell(Securities[_spy]);
+            LogActor.Tell(sec);
 
-            var task = TaskEx.RunEx(async () => await TradeActor.Ask<bool>(_spy, TimeSpan.FromSeconds(1)));
-            var result = task.WaitAndUnwrapException();
+            NewswireActor.Tell(message);
+        }
 
-            if (false)
-            {
-                SetHoldings(_spy, 1);
-                Debug("Purchased Stock");
-            }
+        public void Buy()
+        {
+            SetHoldings(_spy, 1);
+            Debug("Purchased Stock");
+
+            LogActor.Tell("Purchased Stock");
         }
     }
 }
