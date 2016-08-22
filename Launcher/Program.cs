@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
@@ -144,8 +145,9 @@ namespace QuantConnect.Lean.Launcher
         {
             //Launch the UX
             //var form = Composer.Instance.GetExportedValueByTypeName<Form>("desktop-ux-classname");
-            var form = new Views.WinForms.LeanWinForm(messaging, job);
-            Application.Run(form);
+            //Application.Run(form);
+            
+            var desktopViewFacade = new DesktopViewFacade(messaging, job);
         }
     }
 }
