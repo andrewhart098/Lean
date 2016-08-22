@@ -101,7 +101,6 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
         {
-            // TODO
             _messaging.OnConsumerReadyEvent();
         }
         
