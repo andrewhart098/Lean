@@ -20,19 +20,20 @@ namespace QuantConnect.Messaging
         {
             _messaging = (EventMessagingHandler)messaging;
 
-            // Setup Event Handlers of message handler 
-            // These will call GrapeVine client
+            // Setup Event Handlers
             _messaging.DebugEvent += MessagingOnDebugEvent;
             _messaging.LogEvent += MessagingOnLogEvent;
             _messaging.RuntimeErrorEvent += MessagingOnRuntimeErrorEvent;
             _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
-            // Start server
-            _server = new InterprocessApiServer(this);
-            _server.StartServer(serverPort);
-
             _client = new InterprocessApiClient(clientPort);
+
+            // Start server on different thread
+            _server = new InterprocessApiServer(this);
+            var thread = new Thread(() => _server.StartServer(serverPort));
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
         }
 
         public void StopServer()

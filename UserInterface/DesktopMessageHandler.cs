@@ -14,6 +14,15 @@ namespace QuantConnect.Views
         private readonly DesktopServer _server;
         private readonly DesktopClient _client;
 
+        public DesktopMessageHandler(string serverPort, string clientPort)
+        {
+            // Start server
+            _server = new DesktopServer(this);
+            _server.StartServer(serverPort);
+
+            _client = new DesktopClient(clientPort);
+        }
+
         #region Delegates and Events
         // Create Events and delegates that mirror EventMessagingHandler
         public delegate void DebugEventRaised(DebugPacket packet);
