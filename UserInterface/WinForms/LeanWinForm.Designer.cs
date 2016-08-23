@@ -134,7 +134,7 @@
             this.ClientSize = new System.Drawing.Size(1443, 903);
             this.Controls.Add(this.splitPanel);
             this.Controls.Add(this.statusStrip1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            //this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(1024, 768);
             this.Name = "LeanWinForm";
             this.Text = "QuantConnect Lean Algorithmic Trading Engine: v0.00";
