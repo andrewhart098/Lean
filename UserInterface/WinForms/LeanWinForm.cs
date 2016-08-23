@@ -17,7 +17,7 @@ namespace QuantConnect.Views.WinForms
         private readonly WebBrowser _monoBrowser;
         private readonly AlgorithmNodePacket _job;
         private readonly QueueLogHandler _logging;
-        private readonly EventMessagingHandler _messaging;
+        private readonly DesktopMessageHandler _messaging;
         private readonly bool _liveMode = false;
         private GeckoWebBrowser _geckoBrowser;
 
@@ -26,7 +26,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         /// <param name="notificationHandler">Messaging system</param>
         /// <param name="job">Job to use for URL generation</param>
-        public LeanWinForm(IMessagingHandler notificationHandler, AlgorithmNodePacket job)
+        public LeanWinForm(DesktopMessageHandler notificationHandler, AlgorithmNodePacket job)
         {
             InitializeComponent();
 
@@ -38,7 +38,7 @@ namespace QuantConnect.Views.WinForms
             //Save off the messaging event handler we need:
             _job = job;
             _liveMode = job is LiveNodePacket;
-            _messaging = (EventMessagingHandler)notificationHandler;
+            _messaging = notificationHandler;
             var url = GetUrl(job, _liveMode);
 
             //GECKO WEB BROWSER: Create the browser control

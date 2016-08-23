@@ -148,7 +148,7 @@ namespace QuantConnect.Lean.Launcher
             //var form = new Views.WinForms.LeanWinForm(messaging, job);
             //Application.Run(form);
 
-            var da = new DesktopApi(messaging, serverPort: "1234", clientPort: "4321");
+            var da = new InterprocessApi(messaging, serverPort: "1234", clientPort: "4321");
         }
     }
 }

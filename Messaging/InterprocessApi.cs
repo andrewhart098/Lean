@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Grapevine;
 using Grapevine.Client;
 using Grapevine.Server;
@@ -15,34 +10,13 @@ using QuantConnect.Packets;
 
 namespace QuantConnect.Messaging
 {
-    public class DesktopApi
+    public class InterprocessApi
     {
         private readonly EventMessagingHandler _messaging;
-        private readonly DesktopApiServer _server;
-        private readonly DesktopApiClient _client;
+        private readonly InterprocessApiServer _server;
+        private readonly InterprocessApiClient _client;
 
-        #region Delegates and Events
-        // Create Events and delegates that mirror EventMessagingHandler
-        public delegate void DebugEventRaised(DebugPacket packet);
-        public event DebugEventRaised DebugEvent;
-
-        public delegate void LogEventRaised(LogPacket packet);
-        public event LogEventRaised LogEvent;
-
-        public delegate void RuntimeErrorEventRaised(RuntimeErrorPacket packet);
-        public event RuntimeErrorEventRaised RuntimeErrorEvent;
-
-        public delegate void HandledErrorEventRaised(HandledErrorPacket packet);
-        public event HandledErrorEventRaised HandledErrorEvent;
-
-        public delegate void BacktestResultEventRaised(BacktestResultPacket packet);
-        public event BacktestResultEventRaised BacktestResultEvent;
-
-        public delegate void ConsumerReadyEventRaised();
-        public event ConsumerReadyEventRaised ConsumerReadyEvent;
-        #endregion
-
-        public DesktopApi(IMessagingHandler messaging, string serverPort, string clientPort)
+        public InterprocessApi(IMessagingHandler messaging, string serverPort, string clientPort)
         {
             _messaging = (EventMessagingHandler)messaging;
 
@@ -55,10 +29,10 @@ namespace QuantConnect.Messaging
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
             // Start server
-            _server = new DesktopApiServer(this);
+            _server = new InterprocessApiServer(this);
             _server.StartServer(serverPort);
 
-            _client = new DesktopApiClient(clientPort);
+            _client = new InterprocessApiClient(clientPort);
         }
 
         public void StopServer()
@@ -103,88 +77,15 @@ namespace QuantConnect.Messaging
         }
         #endregion
 
-        #region Delegates
-        /// <summary>
-        /// Raise a debug event safely
-        /// </summary>
-        public virtual void OnDebugEvent(DebugPacket packet)
-        {
-            var handler = DebugEvent;
 
-            if (handler != null)
-            {
-                handler(packet);
-            }
-        }
-
-        /// <summary>
-        /// Handler for consumer ready code.
-        /// </summary>
-        public virtual void OnConsumerReadyEvent()
-        {
-            var handler = ConsumerReadyEvent;
-            if (handler != null)
-            {
-                handler();
-            }
-        }
-
-        /// <summary>
-        /// Raise a log event safely
-        /// </summary>
-        public virtual void OnLogEvent(LogPacket packet)
-        {
-            var handler = LogEvent;
-            if (handler != null)
-            {
-                handler(packet);
-            }
-        }
-
-        /// <summary>
-        /// Raise a handled error event safely
-        /// </summary>
-        public virtual void OnHandledErrorEvent(HandledErrorPacket packet)
-        {
-            var handler = HandledErrorEvent;
-            if (handler != null)
-            {
-                handler(packet);
-            }
-        }
-
-        /// <summary>
-        /// Raise runtime error safely
-        /// </summary>
-        public virtual void OnRuntimeErrorEvent(RuntimeErrorPacket packet)
-        {
-            var handler = RuntimeErrorEvent;
-            if (handler != null)
-            {
-                handler(packet);
-            }
-        }
-
-        /// <summary>
-        /// Raise a backtest result event safely.
-        /// </summary>
-        public virtual void OnBacktestResultEvent(BacktestResultPacket packet)
-        {
-            var handler = BacktestResultEvent;
-            if (handler != null)
-            {
-                handler(packet);
-            }
-        }
-        #endregion
     }
 
     #region Client
-    public class DesktopApiClient
+    public class InterprocessApiClient
     {
         private static RESTClient _client;
 
-        public DesktopApiClient(string port)
+        public InterprocessApiClient(string port)
         {
             _client = new RESTClient("http://localhost:" + port);
         }
@@ -266,12 +167,12 @@ namespace QuantConnect.Messaging
     #endregion
 
     #region Server
-    public class DesktopApiServer
+    public class InterprocessApiServer
     {
         private static RESTServer _server;
-        private static DesktopApi _handler;
+        private static InterprocessApi _handler;
 
-        public DesktopApiServer(DesktopApi handler)
+        public InterprocessApiServer(InterprocessApi handler)
         {
             _handler = handler;
         }
@@ -305,53 +206,6 @@ namespace QuantConnect.Messaging
         // Routes
         public sealed class Resources : RESTResource
         {
-
-            // POST routes
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]
-            public void ReceiveDebugEvent(HttpListenerContext context)
-            {
-                var packet = Deserialize<DebugPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Debug event.");
-
-                _handler.OnDebugEvent(packet);
-            }
-
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/HandledErrorEvent")]
-            public void ReceiveHandledErrorEvent(HttpListenerContext context)
-            {
-                var packet = Deserialize<HandledErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Handled Error Event.");
-
-                _handler.OnHandledErrorEvent(packet);
-            }
-
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/BacktestResultEvent")]
-            public void ReceiveBacktestResultEvent(HttpListenerContext context)
-            {
-                var packet = Deserialize<BacktestResultPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Backtest Result Event.");
-
-                _handler.OnBacktestResultEvent(packet);
-            }
-
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/RuntimeErrorEvent")]
-            public void ReceiveRuntimeErrorEvent(HttpListenerContext context)
-            {
-                var packet = Deserialize<RuntimeErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Runtime Error Event.");
-
-                _handler.OnRuntimeErrorEvent(packet);
-            }
-
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/LogEvent")]
-            public void ReceiveLogEvent(HttpListenerContext context)
-            {
-                var packet = Deserialize<LogPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Log Event.");
-
-                _handler.OnLogEvent(packet);
-            }
-
             // GET routes
             [RESTRoute(Method = HttpMethod.GET, PathInfo = @"^/ConsumerReady")]
             public void HandleConsumerReadyEvent(HttpListenerContext context)
