@@ -13,12 +13,14 @@ namespace QuantConnect.Messaging
     public class InterprocessApi
     {
         private readonly EventMessagingHandler _messaging;
+        private readonly AlgorithmNodePacket _job;
         private readonly InterprocessApiServer _server;
         private readonly InterprocessApiClient _client;
 
-        public InterprocessApi(IMessagingHandler messaging, string serverPort, string clientPort)
+        public InterprocessApi(IMessagingHandler messaging, AlgorithmNodePacket job, string serverPort, string clientPort)
         {
             _messaging = (EventMessagingHandler)messaging;
+            _job = job;
 
             // Setup Event Handlers
             _messaging.DebugEvent += MessagingOnDebugEvent;
@@ -27,6 +29,7 @@ namespace QuantConnect.Messaging
             _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
+            // Start client
             _client = new InterprocessApiClient(clientPort);
 
             // Start server on different thread
@@ -34,6 +37,35 @@ namespace QuantConnect.Messaging
             var thread = new Thread(() => _server.StartServer(serverPort));
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
+        }
+
+        /// <summary>
+        /// Get the URL for the embedded charting
+        /// </summary>
+        /// <param name="job">Job packet for the URL</param>
+        /// <param name="liveMode">Is this a live mode chart?</param>
+        /// <param name="holdReady">Hold the ready signal to inject data</param>
+        public static string GetUrl(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
+        {
+            var url = "";
+            var hold = holdReady == false ? "0" : "1";
+            var embedPage = liveMode ? "embeddedLive" : "embedded";
+
+            url = string.Format(
+                "https://www.quantconnect.com/terminal/{0}?user={1}&token={2}&pid={3}&version={4}&holdReady={5}&bid={6}",
+                embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
+
+            //Show warnings if the API token and UID aren't set.
+            if (job.UserId == 0)
+            {
+                throw new System.Exception("Your user id is not set. Please check your config.json file 'job-user-id' property.");
+            }
+            if (job.Channel == "")
+            {
+                throw new System.Exception("Your API token is not set. Please check your config.json file 'api-access-token' property.");
+            }
+
+            return url;
         }
 
         public void StopServer()
@@ -91,24 +123,6 @@ namespace QuantConnect.Messaging
             _client = new RESTClient("http://localhost:" + port);
         }
 
-        // GET requests
-
-        // Send a message to the server to tell the message handler to begin dequeuing packets
-        public void SendEnqueuedPackets()
-        {
-            var request = CreateGetRequest("/SendEnqueuedPackets");
-
-            _client.Execute(request);
-        }
-
-        // Send a message to the server to tell the message handler that the consumer is ready
-        public void ConsumerReady()
-        {
-            var request = CreateGetRequest("/ConsumerReady");
-
-            _client.Execute(request);
-        }
-
         // POST requests
         public void SendDebugEvent(DebugPacket packet)
         {
@@ -147,19 +161,12 @@ namespace QuantConnect.Messaging
         // Helper methods
         private static RESTRequest CreatePostRequest(Packet packet, string resource)
         {
+            var settings = new JsonSerializerSettings();
+            settings.TypeNameHandling = TypeNameHandling.Objects;
             return new RESTRequest
             {
                 Method = HttpMethod.POST,
-                Payload = JsonConvert.SerializeObject(packet),
-                Resource = resource
-            };
-        }
-
-        private static RESTRequest CreateGetRequest(string resource)
-        {
-            return new RESTRequest
-            {
-                Method = HttpMethod.GET,
+                Payload = JsonConvert.SerializeObject(packet, Formatting.Indented, settings),
                 Resource = resource
             };
         }

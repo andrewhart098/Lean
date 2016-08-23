@@ -21,12 +21,13 @@ namespace QuantConnect.Views.WinForms
         private readonly bool _liveMode = false;
         private GeckoWebBrowser _geckoBrowser;
 
+        private string _holdUrl;
         /// <summary>
         /// Create the UX.
         /// </summary>
         /// <param name="notificationHandler">Messaging system</param>
         /// <param name="job">Job to use for URL generation</param>
-        public LeanWinForm(DesktopMessageHandler notificationHandler, AlgorithmNodePacket job)
+        public LeanWinForm(DesktopMessageHandler notificationHandler, string url, string holdUrl)
         {
             InitializeComponent();
 
@@ -36,10 +37,11 @@ namespace QuantConnect.Views.WinForms
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Globals.Version;
 
             //Save off the messaging event handler we need:
-            _job = job;
-            _liveMode = job is LiveNodePacket;
+            //_job = job;
+            //_liveMode = job is LiveNodePacket;
             _messaging = notificationHandler;
-            var url = GetUrl(job, _liveMode);
+            //var url = GetUrl(job, _liveMode);
+            _holdUrl = holdUrl;
 
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
@@ -68,44 +70,17 @@ namespace QuantConnect.Views.WinForms
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
             _logging = Log.LogHandler as QueueLogHandler;
-
-            //Show warnings if the API token and UID aren't set.
-            if (_job.UserId == 0)
-            {
-                MessageBox.Show("Your user id is not set. Please check your config.json file 'job-user-id' property.", "LEAN Algorithmic Trading", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            if (_job.Channel == "")
-            {
-                MessageBox.Show("Your API token is not set. Please check your config.json file 'api-access-token' property.", "LEAN Algorithmic Trading", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
 
-        /// <summary>
-        /// Get the URL for the embedded charting
-        /// </summary>
-        /// <param name="job">Job packet for the URL</param>
-        /// <param name="liveMode">Is this a live mode chart?</param>
-        /// <param name="holdReady">Hold the ready signal to inject data</param>
-        private static string GetUrl(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
-        {
-            var url = "";
-            var hold = holdReady == false ? "0" : "1";
-            var embedPage = liveMode ? "embeddedLive" : "embedded";
 
-            url = string.Format(
-                "https://www.quantconnect.com/terminal/{0}?user={1}&token={2}&pid={3}&version={4}&holdReady={5}&bid={6}",
-                embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
-
-            return url;
-        }
 
         /// <summary>
         /// MONO BROWSER: Browser content has completely loaded.
         /// </summary>
         private void MonoBrowserOnDocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs webBrowserDocumentCompletedEventArgs)
         {
-            _messaging.OnConsumerReadyEvent();
+            _messaging.ConsumerReady();
         }
 
         /// <summary>
@@ -113,7 +88,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
         {
-            _messaging.OnConsumerReadyEvent();
+            _messaging.ConsumerReady();
         }
         
         /// <summary>
@@ -154,7 +129,7 @@ namespace QuantConnect.Views.WinForms
             if (packet.Progress != 1) return;
 
             //Remove previous event handler:
-            var url = GetUrl(_job, _liveMode, true);
+            var url = _holdUrl;//GetUrl(_job, _liveMode, true);
 
             //Generate JSON:
             var jObj = new JObject();

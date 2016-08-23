@@ -1,10 +1,12 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net;
 using System.Threading;
 using Grapevine;
 using Grapevine.Client;
 using Grapevine.Server;
 using Newtonsoft.Json;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Views
@@ -16,11 +18,14 @@ namespace QuantConnect.Views
 
         public DesktopMessageHandler(string serverPort, string clientPort)
         {
-            // Start server
-            _server = new DesktopServer(this);
-            _server.StartServer(serverPort);
-
+            // Start client
             _client = new DesktopClient(clientPort);
+
+            // Start server on another thread
+            _server = new DesktopServer(this);
+            var thread = new Thread(() => _server.StartServer(serverPort));
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
         }
 
         #region Delegates and Events
@@ -199,25 +204,35 @@ namespace QuantConnect.Views
 
         public static T Deserialize<T>(Stream s)
         {
-            using (StreamReader reader = new StreamReader(s))
-            using (JsonTextReader jsonReader = new JsonTextReader(reader))
+            try
             {
-                JsonSerializer ser = new JsonSerializer();
-                return ser.Deserialize<T>(jsonReader);
+                using (StreamReader reader = new StreamReader(s))
+                {
+                    using (JsonTextReader jsonReader = new JsonTextReader(reader))
+                    {
+                        JsonSerializer ser = new JsonSerializer();
+                        return ser.Deserialize<T>(jsonReader);
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("There was an error deserializing");
+                Console.WriteLine(ex.ToString());
+            }
+            return default(T);
         }
 
         // Routes
         public sealed class Resources : RESTResource
         {
-
             // POST routes
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]
             public void ReceiveDebugEvent(HttpListenerContext context)
             {
                 var packet = Deserialize<DebugPacket>(context.Request.InputStream);
                 SendTextResponse(context, "Successfully captured Debug event.");
-
+                Console.WriteLine("Debug Event");
                 _handler.OnDebugEvent(packet);
             }
 
@@ -226,16 +241,28 @@ namespace QuantConnect.Views
             {
                 var packet = Deserialize<HandledErrorPacket>(context.Request.InputStream);
                 SendTextResponse(context, "Successfully captured Handled Error Event.");
-
+                Console.WriteLine("Handled Error Event");
                 _handler.OnHandledErrorEvent(packet);
             }
 
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/BacktestResultEvent")]
             public void ReceiveBacktestResultEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<BacktestResultPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Backtest Result Event.");
+                BacktestResultPacket packet; // Deserialize<BacktestResultPacket>(context.Request.InputStream);
 
+                using (StreamReader reader = new StreamReader(context.Request.InputStream))
+                {
+                    using (JsonTextReader jsonReader = new JsonTextReader(reader))
+                    {
+                        var converter = new OrderJsonConverter();
+                        JsonSerializer ser = new JsonSerializer();
+                        ser.Converters.Add(converter);
+                        packet = ser.Deserialize<BacktestResultPacket>(jsonReader);
+                    }
+                }
+
+                SendTextResponse(context, "Successfully captured Backtest Result Event.");
+                Console.WriteLine("Backtest Result Event");
                 _handler.OnBacktestResultEvent(packet);
             }
 
@@ -253,7 +280,7 @@ namespace QuantConnect.Views
             {
                 var packet = Deserialize<LogPacket>(context.Request.InputStream);
                 SendTextResponse(context, "Successfully captured Log Event.");
-
+                Console.WriteLine("Successfully captured Log Event.");
                 _handler.OnLogEvent(packet);
             }
 

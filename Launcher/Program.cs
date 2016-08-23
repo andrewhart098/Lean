@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
@@ -86,11 +87,12 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
+            Thread thread;
             if (environment.EndsWith("-desktop"))
             {
                 Application.EnableVisualStyles();
                 var messagingHandler = leanEngineSystemHandlers.Notify;
-                var thread = new Thread(() => LaunchUX(messagingHandler, job));
+                thread = new Thread(() => LaunchUX(messagingHandler, job));
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.Start();
             }
@@ -143,12 +145,12 @@ namespace QuantConnect.Lean.Launcher
         /// </summary>
         static void LaunchUX(IMessagingHandler messaging, AlgorithmNodePacket job)
         {
-            //Launch the UX
-            //var form = Composer.Instance.GetExportedValueByTypeName<Form>("desktop-ux-classname");
-            //var form = new Views.WinForms.LeanWinForm(messaging, job);
-            //Application.Run(form);
+            var api = new InterprocessApi(messaging, job, "1234", "4321");
+            var url = InterprocessApi.GetUrl(job, false, false);
+            var holdUrl = InterprocessApi.GetUrl(job, false, true);
 
-            var da = new InterprocessApi(messaging, serverPort: "1234", clientPort: "4321");
+            string[] args = { "4321", "1234", url, holdUrl};
+            Process.Start(@".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe", String.Join(" ", args));
         }
     }
 }
