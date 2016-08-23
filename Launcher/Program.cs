@@ -22,6 +22,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
+using QuantConnect.Messaging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -146,6 +147,8 @@ namespace QuantConnect.Lean.Launcher
             //var form = Composer.Instance.GetExportedValueByTypeName<Form>("desktop-ux-classname");
             //var form = new Views.WinForms.LeanWinForm(messaging, job);
             //Application.Run(form);
+
+            var da = new DesktopApi(messaging, serverPort: "1234", clientPort: "4321");
         }
     }
 }
