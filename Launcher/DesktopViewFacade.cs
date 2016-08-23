@@ -19,8 +19,7 @@ namespace QuantConnect.Lean.Launcher
             _messaging = (EventMessagingHandler) messaging;
             _job = job;
 
-            SendMessagesHandler del1 = new SendMessagesHandler(SendMessages);
-            _messaging.SendEnqueuedPackets();
+            
 
             Run();
         }
@@ -28,15 +27,8 @@ namespace QuantConnect.Lean.Launcher
         private void Run()
         {
             var url = GetUrl(_job, false);
-            // start the exe that represents the server and WinForms app 
-            // PASS IN URL
             Process.Start(@".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe", url);
 
-        }
-
-        void SendMessages(Object sender, EventArgs e)
-        {
-            var t = e;
         }
 
         /// <summary>

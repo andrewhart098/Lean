@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Grapevine;
 using Grapevine.Client;
-using Grapevine.Server;
+using Newtonsoft.Json;
+using QuantConnect.Interfaces;
+using QuantConnect.Packets;
 
 
 namespace QuantConnect.Messaging
@@ -12,53 +11,69 @@ namespace QuantConnect.Messaging
     /// <summary>
     /// 
     /// </summary>
-    public class DesktopClient
+    public class DesktopApi
     {
         // Client for sending asynchronous requests.
-        private static readonly RestClient _client = new RestClient();
+        private static readonly RESTClient _client = new RESTClient("http://localhost:1238");
+        private readonly EventMessagingHandler _messaging;
 
 
-    }
+        //public DesktopApi()
+        //{
+        //    //_messaging = (EventMessagingHandler)notificationHandler;
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public class DesktopServer
-    {
-        // Client for sending asynchronous requests.
-        private readonly RestServer _server;
+        //    //// Setup event handlers
+        //    //_messaging.DebugEvent += MessagingOnDebugEvent;
+        //    //_messaging.LogEvent += MessagingOnLogEvent;
+        //    //_messaging.RuntimeErrorEvent += MessagingOnRuntimeErrorEvent;
+        //    //_messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
+        //    //_messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
+        //}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="port"></param>
-        public DesktopServer(string port)
+        private void MessagingOnBacktestResultEvent(BacktestResultPacket packet)
         {
-            var settings = new ServerSettings
-            {
-                Port = port
-            };
-
-            _server = new RestServer(settings);
-            _server.Start();
+            Send(packet, "BacktestResult");
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public bool IsListening()
+        private void MessagingOnHandledErrorEvent(HandledErrorPacket packet)
         {
-            return _server.IsListening;
+            Send(packet, "HandledError");
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Stop()
+        private void MessagingOnRuntimeErrorEvent(RuntimeErrorPacket packet)
         {
-            _server.ThreadSafeStop();
+            Send(packet, "RuntimeError");
         }
 
+        private void MessagingOnLogEvent(LogPacket packet)
+        {
+            Send(packet, "Log");
+        }
+
+        private void MessagingOnDebugEvent(DebugPacket packet)
+        {
+            Send(packet, "Debug");
+        }
+
+        private void Send(Packet packet, string path)
+        {
+            var tx = JsonConvert.SerializeObject(packet);
+            var request = new RESTRequest("/resources");
+
+            request.Payload = tx;
+
+
+            _client.Execute(request);
+        }
+
+        public static void Send(Packet packet)
+        {
+            var tx = JsonConvert.SerializeObject(packet);
+            var request = new RESTRequest("/resources", HttpMethod.POST);
+
+            request.Payload = tx;
+
+            var r = _client.Execute(request);
+        }
     }
 }

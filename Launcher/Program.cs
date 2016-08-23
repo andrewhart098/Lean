@@ -23,6 +23,7 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
+using QuantConnect.Messaging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -31,7 +32,7 @@ namespace QuantConnect.Lean.Launcher
     public class Program
     {
         private const string _collapseMessage = "Unhandled exception breaking past controls and causing collapse of algorithm node. This is likely a memory leak of an external dependency or the underlying OS terminating the LEAN engine.";
-
+        
         static void Main(string[] args)
         {
             //Initialize:
@@ -88,11 +89,13 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
-                Application.EnableVisualStyles();
-                var messagingHandler = leanEngineSystemHandlers.Notify;
-                var thread = new Thread(() => LaunchUX(messagingHandler, job));
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
+                //Application.EnableVisualStyles();
+                //var messagingHandler = leanEngineSystemHandlers.Notify;
+                //var thread = new Thread(() => LaunchUX(messagingHandler, job));
+                //thread.SetApartmentState(ApartmentState.STA);
+                //thread.Start();
+
+                
             }
 
             // log the job endpoints

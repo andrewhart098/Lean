@@ -169,6 +169,8 @@ namespace QuantConnect.Messaging
             {
                 StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
             }
+
+            DesktopApi.Send(packet);
         }
 
         /// <summary>
