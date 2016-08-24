@@ -147,7 +147,7 @@ namespace QuantConnect.Lean.Launcher
         /// <param name="messagingHandler"></param>
         static void LaunchUX(StreamingHttpMessageHandler messagingHandler)
         {
-            string strLoc = @".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe";
+            string strLoc = Config.Get("desktop-exe");
 
             if (!messagingHandler.CheckHeartBeat())
             {
