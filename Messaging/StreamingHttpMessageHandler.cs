@@ -1,6 +1,7 @@
 ﻿using System;
 using Grapevine.Client;
 using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
@@ -16,9 +17,13 @@ namespace QuantConnect.Messaging
     {
         private AlgorithmNodePacket _job;
 
-        // Client for sending asynchronous requests.
-        private static readonly RESTClient Client = new RESTClient("http://localhost.fiddler:1234");
+        // Port to send data to
+        public static readonly string Port = Config.Get("http-port");
 
+        // Client for sending asynchronous requests.
+        private static readonly RESTClient Client = new RESTClient("http://localhost.fiddler:" + Port);
+
+        
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
         /// This is not used in this message handler.  Messages are sent via http as they arrive

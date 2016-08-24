@@ -151,7 +151,7 @@ namespace QuantConnect.Lean.Launcher
 
             if (!messagingHandler.CheckHeartBeat())
             {
-                Process.Start(strLoc, "1234");
+                Process.Start(strLoc, Config.Get("http-port"));
             }
             
             messagingHandler.SendJobToUI();

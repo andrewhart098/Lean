@@ -166,21 +166,22 @@
 
     // defines the 'backtesting-desktop' environment
     "backtesting-desktop": {
-      "live-mode": false,
-      "send-via-api": true,
+        "live-mode": false,
+        "send-via-api": true,
 
-      //Required for local charting.
-      // To get your api access token go to quantconnect.com/account
-      "job-user-id": "0",
-      "api-access-token": "",
+        //Required for local charting.
+        // To get your api access token go to quantconnect.com/account
+        "job-user-id": "0",
+        "api-access-token": "",
 
-      "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
-      "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
-      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
-      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
-      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
-      "messaging-handler": "QuantConnect.Messaging.EventMessagingHandler",
-      "log-handler": "QuantConnect.Logging.QueueLogHandler"
+        "setup-handler": "QuantConnect.Lean.Engine.Setup.ConsoleSetupHandler",
+        "result-handler": "QuantConnect.Lean.Engine.Results.BacktestingResultHandler",
+        "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.FileSystemDataFeed",
+        "real-time-handler": "QuantConnect.Lean.Engine.RealTime.BacktestingRealTimeHandler",
+        "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
+        "messaging-handler": "QuantConnect.Messaging.StreamingHttpMessageHandler",
+        "log-handler": "QuantConnect.Logging.QueueLogHandler",
+        "http-port": "1234"
     },
 
     // defines the 'live-desktop' environment
