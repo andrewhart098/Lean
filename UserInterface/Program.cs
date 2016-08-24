@@ -1,38 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using QuantConnect.Packets;
 using QuantConnect.Views.WinForms;
 
 namespace QuantConnect.Views
 {
     public class Program
     {
-        [STAThread]
+        private static LeanWinForm _form;
         static void Main(string[] args)
         {
-            Console.WriteLine(args[0]);
-            Console.WriteLine(args[1]);
-
-            Console.WriteLine(args[2]);
-            Console.WriteLine(args[3]);
-            if (args.Length != 4)
+            if (args.Length != 1)
             {
                 throw new Exception(
-                    "You must pass in the ports for the client and server as arguements to this executable");
+                    "Error: You must specify the port on which the application will open a TCP socket.");
             }
 
-            var serverPort = args[0];
-            var clientPort = args[1];
-            var url = args[2];
-            var holdUrl = args[3];
+            var port = args[0];
 
-            var desktopApi = new DesktopMessageHandler(serverPort: serverPort, clientPort: clientPort);
+            var desktopApi = new DesktopMessageHandler(port);
 
-            var form = new LeanWinForm(desktopApi, url, holdUrl);
-            Application.Run(form);
+            desktopApi.ReceivedJobEvent += (packet) =>
+            {
+                _form.Initialize(packet);
+            };
+
+            StartApplicaiton(desktopApi);
+        }
+
+        private static void StartApplicaiton(DesktopMessageHandler handler)
+        {
+            Thread thread = new Thread(() =>
+                {
+                    _form = new LeanWinForm(handler);
+                    Application.Run(_form);
+                });
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
         }
     }
 }

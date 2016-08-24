@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using Grapevine;
-using Grapevine.Client;
 using Grapevine.Server;
 using Newtonsoft.Json;
 using QuantConnect.Orders;
@@ -14,13 +13,9 @@ namespace QuantConnect.Views
     public class DesktopMessageHandler
     {
         private readonly DesktopServer _server;
-        private readonly DesktopClient _client;
 
-        public DesktopMessageHandler(string serverPort, string clientPort)
+        public DesktopMessageHandler(string serverPort)
         {
-            // Start client
-            _client = new DesktopClient(clientPort);
-
             // Start server on another thread
             _server = new DesktopServer(this);
             var thread = new Thread(() => _server.StartServer(serverPort));
@@ -47,9 +42,24 @@ namespace QuantConnect.Views
 
         public delegate void ConsumerReadyEventRaised();
         public event ConsumerReadyEventRaised ConsumerReadyEvent;
+
+        public delegate void ReceivedJobEventRaised(AlgorithmNodePacket packet);
+        public event ReceivedJobEventRaised ReceivedJobEvent;
         #endregion
 
-        #region Delegates
+        /// <summary>
+        /// Raise a debug event safely
+        /// </summary>
+        public virtual void OnJobEvent(AlgorithmNodePacket packet)
+        {
+            var handler = ReceivedJobEvent;
+
+            if (handler != null)
+            {
+                handler(packet);
+            }
+        }
+
         /// <summary>
         /// Raise a debug event safely
         /// </summary>
@@ -122,58 +132,7 @@ namespace QuantConnect.Views
                 handler(packet);
             }
         }
-        #endregion
-
-        public void ConsumerReady()
-        {
-            _client.ConsumerReady();
-        }
-
-        public void SendEnqueuedPackets()
-        {
-            _client.SendEnqueuedPackets();
-        }
     }
-
-    #region Client
-    public class DesktopClient
-    {
-        private static RESTClient _client;
-
-        public DesktopClient(string port)
-        {
-            _client = new RESTClient("http://localhost:" + port);
-        }
-
-        // GET requests
-
-        // Send a message to the server to tell the message handler to begin dequeuing packets
-        public void SendEnqueuedPackets()
-        {
-            var request = CreateGetRequest("/SendEnqueuedPackets");
-
-            _client.Execute(request);
-        }
-
-        // Send a message to the server to tell the message handler that the consumer is ready
-        public void ConsumerReady()
-        {
-            var request = CreateGetRequest("/ConsumerReady");
-
-            _client.Execute(request);
-        }
-
-        private static RESTRequest CreateGetRequest(string resource)
-        {
-            return new RESTRequest
-            {
-                Method = HttpMethod.GET,
-                Resource = resource
-            };
-        }
-    }
-
-    #endregion
 
     #region Server
     public class DesktopServer
@@ -229,6 +188,25 @@ namespace QuantConnect.Views
         public sealed class Resources : RESTResource
         {
             // POST routes
+
+            // Debug endpoint
+            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewLiveJob")]
+            public void ReceiveNewLiveJobEvent(HttpListenerContext context)
+            {
+                Console.WriteLine("New Job Received");
+                var packet = Deserialize<LiveNodePacket>(context.Request.InputStream);
+                SendTextResponse(context, CreateResponse("Success", "Successfully captured new job."));
+                _handler.OnJobEvent(packet);
+            }
+
+            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewBacktestingJob")]
+            public void ReceiveNewBacktestingJobEvent(HttpListenerContext context)
+            {
+                Console.WriteLine("New Job Received");
+                var packet = Deserialize<BacktestNodePacket>(context.Request.InputStream);
+                SendTextResponse(context, CreateResponse("Success", "Successfully captured new job."));
+                _handler.OnJobEvent(packet);
+            }
 
             // Debug endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]

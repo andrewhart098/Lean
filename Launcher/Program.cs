@@ -17,6 +17,8 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
@@ -91,7 +93,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 Application.EnableVisualStyles();
                 var messagingHandler = leanEngineSystemHandlers.Notify;
-                Thread thread = new Thread(() => LaunchUX());
+                Thread thread = new Thread(() => LaunchUX((StreamingHttpMessageHandler) messagingHandler));
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.Start();
             }
@@ -142,9 +144,17 @@ namespace QuantConnect.Lean.Launcher
         /// <summary>
         /// Form launcher method for thread.
         /// </summary>
-        static void LaunchUX()
+        /// <param name="messagingHandler"></param>
+        static void LaunchUX(StreamingHttpMessageHandler messagingHandler)
         {
-            Process.Start(@".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe", "1234");
+            string strLoc = @".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe";
+
+            if (!messagingHandler.CheckHeartBeat())
+            {
+                Process.Start(strLoc, "1234");
+            }
+            
+            messagingHandler.SendJobToUI();
         }
     }
 }

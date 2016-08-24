@@ -15,19 +15,19 @@ namespace QuantConnect.Views.WinForms
     public partial class LeanWinForm : Form
     {
         private readonly WebBrowser _monoBrowser;
-        private readonly AlgorithmNodePacket _job;
         private readonly QueueLogHandler _logging;
         private readonly DesktopMessageHandler _messaging;
-        private readonly bool _liveMode = false;
+        
         private GeckoWebBrowser _geckoBrowser;
+        private AlgorithmNodePacket _job;
+        private bool _liveMode = false;
 
-        private string _holdUrl;
         /// <summary>
         /// Create the UX.
         /// </summary>
         /// <param name="notificationHandler">Messaging system</param>
         /// <param name="job">Job to use for URL generation</param>
-        public LeanWinForm(DesktopMessageHandler notificationHandler, string url, string holdUrl)
+        public LeanWinForm(DesktopMessageHandler notificationHandler)
         {
             InitializeComponent();
 
@@ -37,11 +37,8 @@ namespace QuantConnect.Views.WinForms
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Globals.Version;
 
             //Save off the messaging event handler we need:
-            //_job = job;
-            //_liveMode = job is LiveNodePacket;
+            
             _messaging = notificationHandler;
-            //var url = GetUrl(job, _liveMode);
-            _holdUrl = holdUrl;
 
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
@@ -52,7 +49,7 @@ namespace QuantConnect.Views.WinForms
             _geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
             //_geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
             //_geckoBrowser.Load += (s, e) => { _messaging.SendEnqueuedPackets(); };
-            _geckoBrowser.Navigate(url);
+            
             splitPanel.Panel1.Controls.Add(_geckoBrowser);
 #else
             // MONO WEB BROWSER: Create the browser control
@@ -72,7 +69,14 @@ namespace QuantConnect.Views.WinForms
             _logging = Log.LogHandler as QueueLogHandler;
         }
 
+        public void Initialize(AlgorithmNodePacket job)
+        {
+            _job = job;
+            _liveMode = job is LiveNodePacket;
+            var url = GetUrl(job, _liveMode);
 
+            _geckoBrowser.Navigate(url);
+        }
 
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void MonoBrowserOnDocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs webBrowserDocumentCompletedEventArgs)
         {
-            _messaging.ConsumerReady();
+            //_messaging.ConsumerReady();
         }
 
         /// <summary>
@@ -88,7 +92,7 @@ namespace QuantConnect.Views.WinForms
         /// </summary>
         private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
         {
-            _messaging.ConsumerReady();
+            //_messaging.ConsumerReady();
         }
         
         /// <summary>
@@ -129,7 +133,7 @@ namespace QuantConnect.Views.WinForms
             if (packet.Progress != 1) return;
 
             //Remove previous event handler:
-            var url = _holdUrl;//GetUrl(_job, _liveMode, true);
+            var url = GetUrl(_job, _liveMode, true);
 
             //Generate JSON:
             var jObj = new JObject();
@@ -170,6 +174,25 @@ namespace QuantConnect.Views.WinForms
             {
                 _logging.Trace("STATISTICS:: " + pair.Key + " " + pair.Value);
             }
+        }
+
+        /// <summary>
+        /// Get the URL for the embedded charting
+        /// </summary>
+        /// <param name="job">Job packet for the URL</param>
+        /// <param name="liveMode">Is this a live mode chart?</param>
+        /// <param name="holdReady">Hold the ready signal to inject data</param>
+        private static string GetUrl(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
+        {
+            var url = "";
+            var hold = holdReady == false ? "0" : "1";
+            var embedPage = liveMode ? "embeddedLive" : "embedded";
+
+            url = string.Format(
+                "https://www.quantconnect.com/terminal/{0}?user={1}&token={2}&pid={3}&version={4}&holdReady={5}&bid={6}",
+                embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
+
+            return url;
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace QuantConnect.Messaging
         private AlgorithmNodePacket _job;
 
         // Client for sending asynchronous requests.
-        private static readonly RESTClient Client = new RESTClient("http://localhost:1234");
+        private static readonly RESTClient Client = new RESTClient("http://localhost.fiddler:1234");
 
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
@@ -30,7 +30,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Initialize()
         {
-            //
+            // put the port to start on here
         }
 
         /// <summary>
@@ -40,6 +40,21 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
+        }
+
+        /// <summary>
+        /// Sends a information about the communication channel to the UI over http
+        /// </summary>
+        public void SendJobToUI()
+        {
+            if (_job != null)
+            {
+                if (_job is LiveNodePacket)
+                {
+                    Transmit(_job, "/NewLiveJob");
+                }
+                Transmit(_job, "/NewBacktestingJob");
+            }
         }
 
         /// <summary>
@@ -97,7 +112,6 @@ namespace QuantConnect.Messaging
             }
         }
 
-        #region EventHandlers
         private void SendBacktestResultEvent(BacktestResultPacket packet)
         {
             Transmit(packet, "/BacktestResultEvent");
@@ -122,7 +136,8 @@ namespace QuantConnect.Messaging
         {
             Transmit(packet, "/DebugEvent");
         }
-        #endregion
+
+
 
         /// <summary>
         /// Send a message to the Client using GrapeVine
@@ -148,6 +163,25 @@ namespace QuantConnect.Messaging
             {
                 Log.Error(err, "PacketType: " + packet.Type);
             }
+        }
+
+        public bool CheckHeartBeat()
+        {
+            var request = new RESTRequest
+            {
+                Method = Grapevine.HttpMethod.GET,
+                Resource = "/",
+                Timeout = 1000
+            };
+
+            var response = Client.Execute(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
