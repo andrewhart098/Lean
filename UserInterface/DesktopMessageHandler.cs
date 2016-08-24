@@ -184,6 +184,8 @@ namespace QuantConnect.Views
             return default(T);
         }
 
+
+
         // Routes
         public sealed class Resources : RESTResource
         {
@@ -193,18 +195,16 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewLiveJob")]
             public void ReceiveNewLiveJobEvent(HttpListenerContext context)
             {
-                Console.WriteLine("New Job Received");
                 var packet = Deserialize<LiveNodePacket>(context.Request.InputStream);
-                SendTextResponse(context, CreateResponse("Success", "Successfully captured new job."));
+                SendTextResponse(context, "Success");
                 _handler.OnJobEvent(packet);
             }
 
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewBacktestingJob")]
             public void ReceiveNewBacktestingJobEvent(HttpListenerContext context)
             {
-                Console.WriteLine("New Job Received");
                 var packet = Deserialize<BacktestNodePacket>(context.Request.InputStream);
-                SendTextResponse(context, CreateResponse("Success", "Successfully captured new job."));
+                SendTextResponse(context, "Success");
                 _handler.OnJobEvent(packet);
             }
 
@@ -212,9 +212,8 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]
             public void ReceiveDebugEvent(HttpListenerContext context)
             {
-                Console.WriteLine("Debug Event");
                 var packet = Deserialize<DebugPacket>(context.Request.InputStream);
-                SendTextResponse(context, CreateResponse("Success", "Successfully captured Debug event."));
+                SendTextResponse(context, "Success");
                 _handler.OnDebugEvent(packet);
             }
 
@@ -222,9 +221,8 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/HandledErrorEvent")]
             public void ReceiveHandledErrorEvent(HttpListenerContext context)
             {
-                Console.WriteLine("Handled Error Event");
                 var packet = Deserialize<HandledErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, CreateResponse("Success", "Successfully captured Handled Error Event."));
+                SendTextResponse(context, "Success");
                 _handler.OnHandledErrorEvent(packet);
             }
 
@@ -233,37 +231,25 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/BacktestResultEvent")]
             public void ReceiveBacktestResultEvent(HttpListenerContext context)
             {
-                Console.WriteLine("Backtest Result Event");
-                BacktestResultPacket packet; // Deserialize<BacktestResultPacket>(context.Request.InputStream);
-                try
+                BacktestResultPacket packet;
+                using (StreamReader reader = new StreamReader(context.Request.InputStream))
                 {
-                    using (StreamReader reader = new StreamReader(context.Request.InputStream))
+                    using (JsonTextReader jsonReader = new JsonTextReader(reader))
                     {
-                        using (JsonTextReader jsonReader = new JsonTextReader(reader))
-                        {
-                            var converter = new OrderJsonConverter();
-                            JsonSerializer ser = new JsonSerializer();
-                            ser.Converters.Add(converter);
-                            packet = ser.Deserialize<BacktestResultPacket>(jsonReader);
-                        }
+                        JsonSerializer ser1 = new JsonSerializer();
+                        packet = ser1.Deserialize<BacktestResultPacket>(jsonReader);
                     }
-
-                    SendTextResponse(context, CreateResponse("Success", "Successfully captured Backtest Result Event."));
-                    _handler.OnBacktestResultEvent(packet);
                 }
-                catch (Exception e)
-                {
-                    SendTextResponse(context, CreateResponse("Error", e.ToString()));
-                } 
+                SendTextResponse(context, "Success");
+                _handler.OnBacktestResultEvent(packet);
             }
 
             // Runtime Error endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/RuntimeErrorEvent")]
             public void ReceiveRuntimeErrorEvent(HttpListenerContext context)
             {
-                Console.WriteLine("Runtime Error Event");
                 var packet = Deserialize<RuntimeErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, CreateResponse("Success", "Successfully captured Runtime Error Event."));
+                SendTextResponse(context, "Success");
                 _handler.OnRuntimeErrorEvent(packet);
             }
 
@@ -271,9 +257,8 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/LogEvent")]
             public void ReceiveLogEvent(HttpListenerContext context)
             {
-                Console.WriteLine("Log Event.");
                 var packet = Deserialize<LogPacket>(context.Request.InputStream);
-                SendTextResponse(context, CreateResponse("Success", "Successfully captured Log Event."));
+                SendTextResponse(context, "Success");
                 _handler.OnLogEvent(packet);
             }
 
@@ -282,18 +267,6 @@ namespace QuantConnect.Views
             public void Heartbeat(HttpListenerContext context)
             {
                 this.SendTextResponse(context, "Server is alive!");
-            }
-
-
-            private string CreateResponse(string type, string message)
-            {
-                var response = new Response
-                {
-                    Type = type,
-                    Message = message
-                };
-
-                return JsonConvert.SerializeObject(response);
             }
         }
 
@@ -314,6 +287,12 @@ namespace QuantConnect.Views
             /// </summary>
             public string Message;
         }
-    }
+
+        private class RestSharpRequest
+        {
+           [JsonProperty(PropertyName = "tx")]
+           public string Text { get; set; }
+        }
+}
     #endregion
 }

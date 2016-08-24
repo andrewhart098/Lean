@@ -6,6 +6,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Notifications;
 using QuantConnect.Packets;
+using RestSharp;
 
 namespace QuantConnect.Messaging
 {
@@ -21,7 +22,7 @@ namespace QuantConnect.Messaging
         public static readonly string Port = Config.Get("http-port");
 
         // Client for sending asynchronous requests.
-        private static readonly RESTClient Client = new RESTClient("http://localhost.fiddler:" + Port);
+        private static readonly RestClient Client = new RestClient("http://localhost.fiddler:" + Port);
 
         
         /// <summary>
@@ -155,14 +156,30 @@ namespace QuantConnect.Messaging
             {
                 var tx = JsonConvert.SerializeObject(packet);
 
-                var request = new RESTRequest
+                var request = new RestRequest
                 {
-                    Method = Grapevine.HttpMethod.POST,
+                    Method = Method.POST,
                     Resource = resource,
-                    Payload = tx
                 };
 
+                request.AddParameter("tx", tx, "application/json", ParameterType.RequestBody);
+
                 Client.Execute(request);
+                Client.ExecuteAsyncPost(request, (response, handle) =>
+                {
+                    try
+                    {
+                        
+                        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                        {
+                            Log.Error(new Exception("Client did not reply with a status code of 200." ), "PacketType: " + packet.Type);
+                        }
+                    }
+                    catch
+                    {
+                        Log.Error("StreamingApi.Client.ExecuteAsyncPost(): Error sending packet.");
+                    }
+                }, "POST");
             }
             catch (Exception err)
             {
@@ -172,9 +189,9 @@ namespace QuantConnect.Messaging
 
         public bool CheckHeartBeat()
         {
-            var request = new RESTRequest
+            var request = new RestRequest
             {
-                Method = Grapevine.HttpMethod.GET,
+                Method = Method.GET,
                 Resource = "/",
                 Timeout = 1000
             };

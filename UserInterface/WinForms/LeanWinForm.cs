@@ -227,7 +227,10 @@ namespace QuantConnect.Views.WinForms
         /// <param name="packet"></param>
         private void MessagingOnDebugEvent(DebugPacket packet)
         {
-            _logging.Trace(packet.Message);
+            if (_logging != null)
+            {
+                _logging.Trace(packet.Message);
+            } 
         }
 
         /// <summary>

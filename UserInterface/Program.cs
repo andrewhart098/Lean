@@ -14,7 +14,8 @@ namespace QuantConnect.Views
 {
     public class Program
     {
-        private static LeanWinForm _form;
+        
+        [STAThread]
         static void Main(string[] args)
         {
             //if (args.Length != 1)
@@ -26,24 +27,15 @@ namespace QuantConnect.Views
             var port = "1234";//args[0];
 
             var desktopApi = new DesktopMessageHandler(port);
+            var form = new LeanWinForm(desktopApi);
 
             desktopApi.ReceivedJobEvent += (packet) =>
             {
-                _form.Initialize(packet);
+                form.Initialize(packet);
             };
 
-            StartApplicaiton(desktopApi);
-        }
-
-        private static void StartApplicaiton(DesktopMessageHandler handler)
-        {
-            Thread thread = new Thread(() =>
-                {
-                    _form = new LeanWinForm(handler);
-                    Application.Run(_form);
-                });
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
+            
+            Application.Run(form);
         }
     }
 }
