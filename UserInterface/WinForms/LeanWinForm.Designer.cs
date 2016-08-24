@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LeanWinForm));
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.FormToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.FormToolStripStatusStringLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -54,34 +53,35 @@
             this.FormToolStripStatusStringLabel,
             this.StatisticsToolStripStatusLabel,
             this.FormToolStripProgressBar});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 868);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 903);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1443, 35);
+            this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 15, 0);
+            this.statusStrip1.Size = new System.Drawing.Size(1574, 38);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // FormToolStripStatusLabel
             // 
             this.FormToolStripStatusLabel.Name = "FormToolStripStatusLabel";
-            this.FormToolStripStatusLabel.Size = new System.Drawing.Size(182, 30);
+            this.FormToolStripStatusLabel.Size = new System.Drawing.Size(211, 33);
             this.FormToolStripStatusLabel.Text = "Loading Complete";
             // 
             // FormToolStripStatusStringLabel
             // 
             this.FormToolStripStatusStringLabel.Name = "FormToolStripStatusStringLabel";
-            this.FormToolStripStatusStringLabel.Size = new System.Drawing.Size(901, 30);
+            this.FormToolStripStatusStringLabel.Size = new System.Drawing.Size(899, 33);
             this.FormToolStripStatusStringLabel.Spring = true;
             // 
             // StatisticsToolStripStatusLabel
             // 
             this.StatisticsToolStripStatusLabel.Name = "StatisticsToolStripStatusLabel";
-            this.StatisticsToolStripStatusLabel.Size = new System.Drawing.Size(243, 30);
+            this.StatisticsToolStripStatusLabel.Size = new System.Drawing.Size(275, 33);
             this.StatisticsToolStripStatusLabel.Text = "Statistics: CPU:    Ram:    ";
             // 
             // FormToolStripProgressBar
             // 
             this.FormToolStripProgressBar.Name = "FormToolStripProgressBar";
-            this.FormToolStripProgressBar.Size = new System.Drawing.Size(100, 29);
+            this.FormToolStripProgressBar.Size = new System.Drawing.Size(109, 32);
             // 
             // splitPanel
             // 
@@ -95,8 +95,8 @@
             // 
             this.splitPanel.Panel2.Controls.Add(this.groupLog);
             this.splitPanel.Panel2MinSize = 100;
-            this.splitPanel.Size = new System.Drawing.Size(1443, 868);
-            this.splitPanel.SplitterDistance = 693;
+            this.splitPanel.Size = new System.Drawing.Size(1574, 903);
+            this.splitPanel.SplitterDistance = 720;
             this.splitPanel.SplitterWidth = 10;
             this.splitPanel.TabIndex = 2;
             // 
@@ -106,7 +106,7 @@
             this.groupLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupLog.Location = new System.Drawing.Point(0, 0);
             this.groupLog.Name = "groupLog";
-            this.groupLog.Size = new System.Drawing.Size(1439, 161);
+            this.groupLog.Size = new System.Drawing.Size(1570, 169);
             this.groupLog.TabIndex = 0;
             this.groupLog.TabStop = false;
             this.groupLog.Text = "Log";
@@ -114,10 +114,10 @@
             // LogTextBox
             // 
             this.LogTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LogTextBox.Location = new System.Drawing.Point(3, 25);
+            this.LogTextBox.Location = new System.Drawing.Point(3, 27);
             this.LogTextBox.Name = "LogTextBox";
             this.LogTextBox.ReadOnly = true;
-            this.LogTextBox.Size = new System.Drawing.Size(1433, 133);
+            this.LogTextBox.Size = new System.Drawing.Size(1564, 139);
             this.LogTextBox.TabIndex = 0;
             this.LogTextBox.Text = "";
             // 
@@ -129,13 +129,12 @@
             // 
             // LeanWinForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1443, 903);
+            this.ClientSize = new System.Drawing.Size(1574, 941);
             this.Controls.Add(this.splitPanel);
             this.Controls.Add(this.statusStrip1);
-            //this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(1024, 768);
+            this.MinimumSize = new System.Drawing.Size(1115, 797);
             this.Name = "LeanWinForm";
             this.Text = "QuantConnect Lean Algorithmic Trading Engine: v0.00";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;

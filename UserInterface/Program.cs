@@ -17,13 +17,13 @@ namespace QuantConnect.Views
         private static LeanWinForm _form;
         static void Main(string[] args)
         {
-            if (args.Length != 1)
-            {
-                throw new Exception(
-                    "Error: You must specify the port on which the application will open a TCP socket.");
-            }
+            //if (args.Length != 1)
+            //{
+            //    throw new Exception(
+            //        "Error: You must specify the port on which the application will open a TCP socket.");
+            //}
 
-            var port = args[0];
+            var port = "1234";//args[0];
 
             var desktopApi = new DesktopMessageHandler(port);
 

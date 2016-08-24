@@ -17,8 +17,8 @@ namespace QuantConnect.Views.WinForms
         private readonly WebBrowser _monoBrowser;
         private readonly QueueLogHandler _logging;
         private readonly DesktopMessageHandler _messaging;
-        
-        private GeckoWebBrowser _geckoBrowser;
+        private readonly GeckoWebBrowser _geckoBrowser;
+
         private AlgorithmNodePacket _job;
         private bool _liveMode = false;
 
@@ -66,7 +66,7 @@ namespace QuantConnect.Views.WinForms
             _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
-            _logging = Log.LogHandler as QueueLogHandler;
+            _logging = new QueueLogHandler();
         }
 
         public void Initialize(AlgorithmNodePacket job)
