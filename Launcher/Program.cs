@@ -87,12 +87,11 @@ namespace QuantConnect.Lean.Launcher
                 throw;
             }
 
-            Thread thread;
             if (environment.EndsWith("-desktop"))
             {
                 Application.EnableVisualStyles();
                 var messagingHandler = leanEngineSystemHandlers.Notify;
-                thread = new Thread(() => LaunchUX(messagingHandler, job));
+                Thread thread = new Thread(() => LaunchUX());
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.Start();
             }
@@ -143,14 +142,9 @@ namespace QuantConnect.Lean.Launcher
         /// <summary>
         /// Form launcher method for thread.
         /// </summary>
-        static void LaunchUX(IMessagingHandler messaging, AlgorithmNodePacket job)
+        static void LaunchUX()
         {
-            var api = new InterprocessApi(messaging, job, "1234", "4321");
-            var url = InterprocessApi.GetUrl(job, false, false);
-            var holdUrl = InterprocessApi.GetUrl(job, false, true);
-
-            string[] args = { "4321", "1234", url, holdUrl};
-            Process.Start(@".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe", String.Join(" ", args));
+            Process.Start(@".\..\..\..\UserInterface\bin\Debug\QuantConnect.Views.exe", "1234");
         }
     }
 }

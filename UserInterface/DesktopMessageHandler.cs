@@ -217,8 +217,10 @@ namespace QuantConnect.Views
             }
             catch (Exception ex)
             {
+                Console.WriteLine("********************************");
                 Console.WriteLine("There was an error deserializing");
                 Console.WriteLine(ex.ToString());
+                Console.WriteLine("********************************");
             }
             return default(T);
         }
@@ -227,60 +229,73 @@ namespace QuantConnect.Views
         public sealed class Resources : RESTResource
         {
             // POST routes
+
+            // Debug endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]
             public void ReceiveDebugEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<DebugPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Debug event.");
                 Console.WriteLine("Debug Event");
+                var packet = Deserialize<DebugPacket>(context.Request.InputStream);
+                SendTextResponse(context, CreateResponse("Success", "Successfully captured Debug event."));
                 _handler.OnDebugEvent(packet);
             }
 
+            // Error endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/HandledErrorEvent")]
             public void ReceiveHandledErrorEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<HandledErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Handled Error Event.");
                 Console.WriteLine("Handled Error Event");
+                var packet = Deserialize<HandledErrorPacket>(context.Request.InputStream);
+                SendTextResponse(context, CreateResponse("Success", "Successfully captured Handled Error Event."));
                 _handler.OnHandledErrorEvent(packet);
             }
 
+
+            // Backtest endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/BacktestResultEvent")]
             public void ReceiveBacktestResultEvent(HttpListenerContext context)
             {
-                BacktestResultPacket packet; // Deserialize<BacktestResultPacket>(context.Request.InputStream);
-
-                using (StreamReader reader = new StreamReader(context.Request.InputStream))
-                {
-                    using (JsonTextReader jsonReader = new JsonTextReader(reader))
-                    {
-                        var converter = new OrderJsonConverter();
-                        JsonSerializer ser = new JsonSerializer();
-                        ser.Converters.Add(converter);
-                        packet = ser.Deserialize<BacktestResultPacket>(jsonReader);
-                    }
-                }
-
-                SendTextResponse(context, "Successfully captured Backtest Result Event.");
                 Console.WriteLine("Backtest Result Event");
-                _handler.OnBacktestResultEvent(packet);
+                BacktestResultPacket packet; // Deserialize<BacktestResultPacket>(context.Request.InputStream);
+                try
+                {
+                    using (StreamReader reader = new StreamReader(context.Request.InputStream))
+                    {
+                        using (JsonTextReader jsonReader = new JsonTextReader(reader))
+                        {
+                            var converter = new OrderJsonConverter();
+                            JsonSerializer ser = new JsonSerializer();
+                            ser.Converters.Add(converter);
+                            packet = ser.Deserialize<BacktestResultPacket>(jsonReader);
+                        }
+                    }
+
+                    SendTextResponse(context, CreateResponse("Success", "Successfully captured Backtest Result Event."));
+                    _handler.OnBacktestResultEvent(packet);
+                }
+                catch (Exception e)
+                {
+                    SendTextResponse(context, CreateResponse("Error", e.ToString()));
+                } 
             }
 
+            // Runtime Error endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/RuntimeErrorEvent")]
             public void ReceiveRuntimeErrorEvent(HttpListenerContext context)
             {
+                Console.WriteLine("Runtime Error Event");
                 var packet = Deserialize<RuntimeErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Runtime Error Event.");
-
+                SendTextResponse(context, CreateResponse("Success", "Successfully captured Runtime Error Event."));
                 _handler.OnRuntimeErrorEvent(packet);
             }
 
+            // Log endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/LogEvent")]
             public void ReceiveLogEvent(HttpListenerContext context)
             {
+                Console.WriteLine("Log Event.");
                 var packet = Deserialize<LogPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Successfully captured Log Event.");
-                Console.WriteLine("Successfully captured Log Event.");
+                SendTextResponse(context, CreateResponse("Success", "Successfully captured Log Event."));
                 _handler.OnLogEvent(packet);
             }
 
@@ -290,6 +305,36 @@ namespace QuantConnect.Views
             {
                 this.SendTextResponse(context, "Server is alive!");
             }
+
+
+            private string CreateResponse(string type, string message)
+            {
+                var response = new Response
+                {
+                    Type = type,
+                    Message = message
+                };
+
+                return JsonConvert.SerializeObject(response);
+            }
+        }
+
+
+        /// <summary>
+        /// Response object from the Streaming API.
+        /// </summary>
+        private class Response
+        {
+            /// <summary>
+            /// Type of response from the streaming api.
+            /// </summary>
+            /// <remarks>success or error</remarks>
+            public string Type;
+
+            /// <summary>
+            /// Message description of the error or success state.
+            /// </summary>
+            public string Message;
         }
     }
     #endregion

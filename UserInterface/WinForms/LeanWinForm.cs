@@ -50,15 +50,15 @@ namespace QuantConnect.Views.WinForms
             Gecko.Xpcom.Initialize();
 
             _geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
-            _geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
-            _geckoBrowser.Load += (s, e) => { _messaging.SendEnqueuedPackets(); };
+            //_geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
+            //_geckoBrowser.Load += (s, e) => { _messaging.SendEnqueuedPackets(); };
             _geckoBrowser.Navigate(url);
             splitPanel.Panel1.Controls.Add(_geckoBrowser);
 #else
             // MONO WEB BROWSER: Create the browser control
             // Default shipped with VS and Mono. Works OK in Windows, and compiles in linux.
             _monoBrowser = new WebBrowser() {Dock = DockStyle.Fill, Name = "Browser"};
-            _monoBrowser.DocumentCompleted += MonoBrowserOnDocumentCompleted;
+            //_monoBrowser.DocumentCompleted += MonoBrowserOnDocumentCompleted;
             _monoBrowser.Navigate(url);
             splitPanel.Panel1.Controls.Add(_monoBrowser);
 #endif
