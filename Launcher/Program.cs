@@ -142,10 +142,7 @@ namespace QuantConnect.Lean.Launcher
         /// </summary>
         static void LaunchUX(IMessagingHandler messaging, AlgorithmNodePacket job)
         {
-            //Launch the UX
-            //var form = Composer.Instance.GetExportedValueByTypeName<Form>("desktop-ux-classname");
-            var form = new Views.WinForms.LeanWinForm(messaging, job);
-            Application.Run(form);
+            
         }
     }
 }
