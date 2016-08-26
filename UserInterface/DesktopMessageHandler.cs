@@ -161,7 +161,8 @@ namespace QuantConnect.Views
             _server.Stop();
         }
 
-        public static T Deserialize<T>(Stream s)
+
+        public static Model<T> Bind<T>(Stream s)
         {
             try
             {
@@ -170,18 +171,35 @@ namespace QuantConnect.Views
                     using (JsonTextReader jsonReader = new JsonTextReader(reader))
                     {
                         JsonSerializer ser = new JsonSerializer();
-                        return ser.Deserialize<T>(jsonReader);
+
+                        // If backtest result, add custom converter
+                        if (typeof(T) == typeof(BacktestResultPacket))
+                        {
+                            var converter = new OrderJsonConverter();
+                            ser.Converters.Add(converter);
+                        }
+
+                        var packet = ser.Deserialize<T>(jsonReader);
+
+                        return new Model<T>
+                        {
+                            packet = packet,
+                            Errors = false
+                        };
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("********************************");
-                Console.WriteLine("There was an error deserializing");
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine("********************************");
+                Console.WriteLine("There was an error deserializing the request. " + ex.ToString());
             }
-            return default(T);
+
+            // If we made it this far something went wrong
+            return new Model<T>
+            {
+                packet = default(T),
+                Errors = true
+            };
         }
 
 
@@ -195,35 +213,66 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewLiveJob")]
             public void ReceiveNewLiveJobEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<LiveNodePacket>(context.Request.InputStream);
-                SendTextResponse(context, "Success");
-                _handler.OnJobEvent(packet);
+                var model = Bind<LiveNodePacket>(context.Request.InputStream);
+
+                if (model.Errors)
+                {
+                    InternalServerError(context);
+                }
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnJobEvent(model.packet);
+                }
             }
 
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewBacktestingJob")]
             public void ReceiveNewBacktestingJobEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<BacktestNodePacket>(context.Request.InputStream);
-                SendTextResponse(context, "Success");
-                _handler.OnJobEvent(packet);
+                var model = Bind<BacktestNodePacket>(context.Request.InputStream);
+
+                if (model.Errors)
+                {
+                    InternalServerError(context);
+                }
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnJobEvent(model.packet);
+                }
             }
 
             // Debug endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]
             public void ReceiveDebugEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<DebugPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Success");
-                _handler.OnDebugEvent(packet);
+                var model = Bind<DebugPacket>(context.Request.InputStream);
+                if (model.Errors)
+                {
+                    InternalServerError(context);
+                }
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnDebugEvent(model.packet);
+                }
             }
 
             // Error endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/HandledErrorEvent")]
             public void ReceiveHandledErrorEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<HandledErrorPacket>(context.Request.InputStream);
+                var model = Bind<HandledErrorPacket>(context.Request.InputStream);
+                if (model.Errors)
+                {
+                    InternalServerError(context);
+                }
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnHandledErrorEvent(model.packet);
+                }
                 SendTextResponse(context, "Success");
-                _handler.OnHandledErrorEvent(packet);
             }
 
 
@@ -231,35 +280,48 @@ namespace QuantConnect.Views
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/BacktestResultEvent")]
             public void ReceiveBacktestResultEvent(HttpListenerContext context)
             {
-                BacktestResultPacket packet;
-                using (StreamReader reader = new StreamReader(context.Request.InputStream))
+                var model = Bind<BacktestResultPacket>(context.Request.InputStream);
+                if (model.Errors)
                 {
-                    using (JsonTextReader jsonReader = new JsonTextReader(reader))
-                    {
-                        JsonSerializer ser1 = new JsonSerializer();
-                        packet = ser1.Deserialize<BacktestResultPacket>(jsonReader);
-                    }
+                    InternalServerError(context);
                 }
-                SendTextResponse(context, "Success");
-                _handler.OnBacktestResultEvent(packet);
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnBacktestResultEvent(model.packet);
+                }
             }
 
             // Runtime Error endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/RuntimeErrorEvent")]
             public void ReceiveRuntimeErrorEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<RuntimeErrorPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Success");
-                _handler.OnRuntimeErrorEvent(packet);
+                var model = Bind<RuntimeErrorPacket>(context.Request.InputStream);
+                if (model.Errors)
+                {
+                    InternalServerError(context);
+                }
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnRuntimeErrorEvent(model.packet);
+                }
             }
 
             // Log endpoint
             [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/LogEvent")]
             public void ReceiveLogEvent(HttpListenerContext context)
             {
-                var packet = Deserialize<LogPacket>(context.Request.InputStream);
-                SendTextResponse(context, "Success");
-                _handler.OnLogEvent(packet);
+                var model = Bind<LogPacket>(context.Request.InputStream);
+                if (model.Errors)
+                {
+                    InternalServerError(context);
+                }
+                else
+                {
+                    SendTextResponse(context, "Success");
+                    _handler.OnLogEvent(model.packet);
+                }
             }
 
             // GET routes
@@ -269,30 +331,13 @@ namespace QuantConnect.Views
                 this.SendTextResponse(context, "Server is alive!");
             }
         }
+    }
 
+    public class Model<T>
+    {
+        public T packet { get; set; }
+        public bool Errors { get; set; }
+    }
 
-        /// <summary>
-        /// Response object from the Streaming API.
-        /// </summary>
-        private class Response
-        {
-            /// <summary>
-            /// Type of response from the streaming api.
-            /// </summary>
-            /// <remarks>success or error</remarks>
-            public string Type;
-
-            /// <summary>
-            /// Message description of the error or success state.
-            /// </summary>
-            public string Message;
-        }
-
-        private class RestSharpRequest
-        {
-           [JsonProperty(PropertyName = "tx")]
-           public string Text { get; set; }
-        }
-}
     #endregion
 }

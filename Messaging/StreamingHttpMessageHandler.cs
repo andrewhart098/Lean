@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using Grapevine.Client;
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
@@ -46,22 +47,24 @@ namespace QuantConnect.Messaging
         public void SetAuthentication(AlgorithmNodePacket job)
         {
             _job = job;
+
+            if (_job is LiveNodePacket)
+            {
+                Transmit(_job, "/NewLiveJob");
+            }
+            Transmit(_job, "/NewBacktestingJob");
         }
 
-        /// <summary>
-        /// Sends a information about the communication channel to the UI over http
-        /// </summary>
-        public void SendJobToUI()
-        {
-            if (_job != null)
-            {
-                if (_job is LiveNodePacket)
-                {
-                    Transmit(_job, "/NewLiveJob");
-                }
-                Transmit(_job, "/NewBacktestingJob");
-            }
-        }
+        ///// <summary>
+        ///// Sends a information about the communication channel to the UI over http
+        ///// </summary>
+        //public void SendJobToUI()
+        //{
+        //    if (_job != null)
+        //    {
+                
+        //    }
+        //}
 
         /// <summary>
         /// Send any notification with a base type of Notification.
@@ -164,13 +167,11 @@ namespace QuantConnect.Messaging
 
                 request.AddParameter("tx", tx, "application/json", ParameterType.RequestBody);
 
-                Client.Execute(request);
                 Client.ExecuteAsyncPost(request, (response, handle) =>
                 {
                     try
-                    {
-                        
-                        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {        
+                        if (response.StatusCode != HttpStatusCode.OK)
                         {
                             Log.Error(new Exception("Client did not reply with a status code of 200." ), "PacketType: " + packet.Type);
                         }

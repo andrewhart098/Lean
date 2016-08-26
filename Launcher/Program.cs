@@ -93,9 +93,10 @@ namespace QuantConnect.Lean.Launcher
             {
                 Application.EnableVisualStyles();
                 var messagingHandler = leanEngineSystemHandlers.Notify;
-                Thread thread = new Thread(() => LaunchUX((StreamingHttpMessageHandler) messagingHandler));
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
+                //Thread thread = new Thread(() => LaunchUX((StreamingHttpMessageHandler) messagingHandler));
+                //thread.SetApartmentState(ApartmentState.STA);
+                //thread.Start();
+                LaunchUX((StreamingHttpMessageHandler) messagingHandler);
             }
 
             // log the job endpoints
@@ -153,8 +154,6 @@ namespace QuantConnect.Lean.Launcher
             {
                 Process.Start(strLoc, Config.Get("http-port"));
             }
-            
-            messagingHandler.SendJobToUI();
         }
     }
 }
