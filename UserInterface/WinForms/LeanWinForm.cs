@@ -15,18 +15,19 @@ namespace QuantConnect.Views.WinForms
     public partial class LeanWinForm : Form
     {
         private readonly WebBrowser _monoBrowser;
-        private readonly AlgorithmNodePacket _job;
         private readonly QueueLogHandler _logging;
-        private readonly EventMessagingHandler _messaging;
-        private readonly bool _liveMode = false;
+        private readonly DesktopMessageHandler _messaging;
         private GeckoWebBrowser _geckoBrowser;
+
+        private AlgorithmNodePacket _job;
+        private bool _liveMode = false;
+
 
         /// <summary>
         /// Create the UX.
         /// </summary>
         /// <param name="notificationHandler">Messaging system</param>
-        /// <param name="job">Job to use for URL generation</param>
-        public LeanWinForm(IMessagingHandler notificationHandler, AlgorithmNodePacket job)
+        public LeanWinForm(DesktopMessageHandler notificationHandler)
         {
             InitializeComponent();
 
@@ -36,28 +37,19 @@ namespace QuantConnect.Views.WinForms
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Globals.Version;
 
             //Save off the messaging event handler we need:
-            _job = job;
-            _liveMode = job is LiveNodePacket;
-            _messaging = (EventMessagingHandler)notificationHandler;
-            var url = GetUrl(job, _liveMode);
+            _messaging = notificationHandler;
 
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
             // -> If you don't have IE.
 #if !__MonoCS__
             Gecko.Xpcom.Initialize();
-
             _geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
-            _geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
-            _geckoBrowser.Load += (s, e) => { _messaging.SendEnqueuedPackets(); };
-            _geckoBrowser.Navigate(url);
             splitPanel.Panel1.Controls.Add(_geckoBrowser);
 #else
             // MONO WEB BROWSER: Create the browser control
             // Default shipped with VS and Mono. Works OK in Windows, and compiles in linux.
             _monoBrowser = new WebBrowser() {Dock = DockStyle.Fill, Name = "Browser"};
-            _monoBrowser.DocumentCompleted += MonoBrowserOnDocumentCompleted;
-            _monoBrowser.Navigate(url);
             splitPanel.Panel1.Controls.Add(_monoBrowser);
 #endif
             //Setup Event Handlers:
@@ -67,7 +59,17 @@ namespace QuantConnect.Views.WinForms
             _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
             _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
-            _logging = Log.LogHandler as QueueLogHandler;
+            _logging = new QueueLogHandler();
+        }
+
+
+        /// <summary>
+        /// This method is called when a new job is received
+        /// </summary>
+        /// <param name="job">The job that is being executed</param>
+        public void Initialize(AlgorithmNodePacket job)
+        {
+            _job = job;
 
             //Show warnings if the API token and UID aren't set.
             if (_job.UserId == 0)
@@ -78,8 +80,18 @@ namespace QuantConnect.Views.WinForms
             {
                 MessageBox.Show("Your API token is not set. Please check your config.json file 'api-access-token' property.", "LEAN Algorithmic Trading", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
 
+            _liveMode = job is LiveNodePacket;
+            var url = GetUrl(job, _liveMode);
+
+#if !__MonoCS__
+
+            _geckoBrowser.Navigate(url);
+#else
+            _monoBrowser.Navigate(url);
+#endif
+
+        }
 
         /// <summary>
         /// Get the URL for the embedded charting
@@ -98,22 +110,6 @@ namespace QuantConnect.Views.WinForms
                 embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
 
             return url;
-        }
-
-        /// <summary>
-        /// MONO BROWSER: Browser content has completely loaded.
-        /// </summary>
-        private void MonoBrowserOnDocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs webBrowserDocumentCompletedEventArgs)
-        {
-            _messaging.OnConsumerReadyEvent();
-        }
-
-        /// <summary>
-        /// GECKO BROWSER: Browser content has completely loaded.
-        /// </summary>
-        private void BrowserOnDomContentLoaded(object sender, DomEventArgs domEventArgs)
-        {
-            _messaging.OnConsumerReadyEvent();
         }
         
         /// <summary>
