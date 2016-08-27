@@ -22,7 +22,7 @@ namespace QuantConnect.Messaging
         public static readonly string Port = Config.Get("http-port");
 
         // Client for sending asynchronous requests.
-        private static readonly RestClient Client = new RestClient("http://localhost.fiddler:" + Port);
+        private static readonly RestClient Client = new RestClient("http://localhost:" + Port);
 
 
         /// <summary>
