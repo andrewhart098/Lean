@@ -16,12 +16,14 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Logging;
+using QuantConnect.Messaging;
 using QuantConnect.Packets;
 using QuantConnect.Util;
 
@@ -89,9 +91,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 Application.EnableVisualStyles();
                 var messagingHandler = leanEngineSystemHandlers.Notify;
-                var thread = new Thread(() => LaunchUX(messagingHandler, job));
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start();
+                LaunchUX((StreamingHttpMessageHandler) messagingHandler);
             }
 
             // log the job endpoints
@@ -138,11 +138,17 @@ namespace QuantConnect.Lean.Launcher
         }
 
         /// <summary>
-        /// Form launcher method for thread.
+        /// Form launcher method.
         /// </summary>
-        static void LaunchUX(IMessagingHandler messaging, AlgorithmNodePacket job)
+        static void LaunchUX(StreamingHttpMessageHandler  messaging)
         {
-            
+            string strLoc = Config.Get("desktop-exe");
+
+            // If no process listening on specified port, start default UI
+            if (!messaging.CheckHeartBeat())
+            {
+                Process.Start(strLoc, Config.Get("http-port"));
+            }
         }
     }
 }
