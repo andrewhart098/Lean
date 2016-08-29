@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -8,12 +6,11 @@ using QuantConnect.Notifications;
 using QuantConnect.Packets;
 using NetMQ;
 using NetMQ.Sockets;
-using RestSharp;
 
 namespace QuantConnect.Messaging
 {
-    // <summary>
-    /// Message handler that sends messages over http as soon as the messages arrive.
+    /// <summary>
+    /// Message handler that sends messages over tcp using NetMQ.
     /// </summary>
     public class ZeroMQMessageHandler : IMessagingHandler
     {
@@ -37,7 +34,7 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Initialize()
         {
-            // put the port to start on here
+            //
         }
 
         /// <summary>
@@ -71,7 +68,7 @@ namespace QuantConnect.Messaging
         }
 
         /// <summary>
-        /// Send any message with a base type of Packet over http.
+        /// Send certain types of messages with a base type of Packet.
         /// </summary>
         public void Send(Packet packet)
         {
@@ -138,7 +135,7 @@ namespace QuantConnect.Messaging
 
 
         /// <summary>
-        /// Send a message to the Client using GrapeVine
+        /// Send a message to the Client using ZeroMQ
         /// </summary>
         /// <param name="packet">Packet to transmit</param>
         /// <param name="resource">The resource where the packet will be sent</param>
@@ -152,24 +149,5 @@ namespace QuantConnect.Messaging
 
             Client.SendMultipartMessage(message);
         }
-
-        //public bool CheckHeartBeat()
-        //{
-        //    var request = new RestRequest
-        //    {
-        //        Method = Method.GET,
-        //        Resource = "/",
-        //        Timeout = 1000
-        //    };
-
-        //    var response = Client.Execute(request);
-
-        //    if (response.StatusCode == System.Net.HttpStatusCode.OK)
-        //    {
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
     }
 }
