@@ -89,9 +89,8 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
-                Application.EnableVisualStyles();
-                var messagingHandler = leanEngineSystemHandlers.Notify;
-                LaunchUX((ZeroMQMessageHandler) messagingHandler);
+                string strLoc = Config.Get("desktop-exe");
+                Process.Start(strLoc, Config.Get("http-port"));
             }
 
             // log the job endpoints
@@ -140,10 +139,9 @@ namespace QuantConnect.Lean.Launcher
         /// <summary>
         /// Form launcher method for thread.
         /// </summary>
-        static void LaunchUX(ZeroMQMessageHandler messaging)
+        static void LaunchUX()
         {
-            string strLoc = Config.Get("desktop-exe");
-            Process.Start(strLoc, Config.Get("http-port"));
+            
         }
     }
 }
