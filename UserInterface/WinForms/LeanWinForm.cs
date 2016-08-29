@@ -16,7 +16,6 @@ namespace QuantConnect.Views.WinForms
     {
         private readonly WebBrowser _monoBrowser;
         private readonly QueueLogHandler _logging;
-        private readonly DesktopMessageHandler _messaging;
         
         private GeckoWebBrowser _geckoBrowser;
         private bool _liveMode = false;
@@ -26,7 +25,7 @@ namespace QuantConnect.Views.WinForms
         /// Create the UX.
         /// </summary>
         /// <param name="notificationHandler">Messaging system</param>
-        public LeanWinForm(DesktopMessageHandler notificationHandler)
+        public LeanWinForm()
         {
             InitializeComponent();
 
@@ -34,9 +33,6 @@ namespace QuantConnect.Views.WinForms
             CenterToScreen();
             WindowState = FormWindowState.Maximized;
             Text = "QuantConnect Lean Algorithmic Trading Engine: v" + Globals.Version;
-
-            //Save off the messaging event handler we need:
-            _messaging = notificationHandler;
 
             //GECKO WEB BROWSER: Create the browser control
             // https://www.nuget.org/packages/GeckoFX/
@@ -52,12 +48,6 @@ namespace QuantConnect.Views.WinForms
             _monoBrowser = new WebBrowser() {Dock = DockStyle.Fill, Name = "Browser"};
             splitPanel.Panel1.Controls.Add(_monoBrowser);
 #endif
-            //Setup Event Handlers:
-            _messaging.DebugEvent += MessagingOnDebugEvent;
-            _messaging.LogEvent += MessagingOnLogEvent;
-            _messaging.RuntimeErrorEvent += MessagingOnRuntimeErrorEvent;
-            _messaging.HandledErrorEvent += MessagingOnHandledErrorEvent;
-            _messaging.BacktestResultEvent += MessagingOnBacktestResultEvent;
 
             _logging = new QueueLogHandler();
         }
@@ -145,7 +135,7 @@ namespace QuantConnect.Views.WinForms
         /// Backtest result packet
         /// </summary>
         /// <param name="packet"></param>
-        private void MessagingOnBacktestResultEvent(BacktestResultPacket packet)
+        public void MessagingOnBacktestResultEvent(BacktestResultPacket packet)
         {
             if (packet.Progress != 1) return;
 
@@ -196,7 +186,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Display a handled error
         /// </summary>
-        private void MessagingOnHandledErrorEvent(HandledErrorPacket packet)
+        public void MessagingOnHandledErrorEvent(HandledErrorPacket packet)
         {
             var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
             _logging.Error(packet.Message + hstack);
@@ -205,7 +195,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Display a runtime error
         /// </summary>
-        private void MessagingOnRuntimeErrorEvent(RuntimeErrorPacket packet)
+        public void MessagingOnRuntimeErrorEvent(RuntimeErrorPacket packet)
         {
             var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
             _logging.Error(packet.Message + rstack);
@@ -214,7 +204,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Display a log packet
         /// </summary>
-        private void MessagingOnLogEvent(LogPacket packet)
+        public void MessagingOnLogEvent(LogPacket packet)
         {
             _logging.Trace(packet.Message);
         }
@@ -223,7 +213,7 @@ namespace QuantConnect.Views.WinForms
         /// Display a debug packet
         /// </summary>
         /// <param name="packet"></param>
-        private void MessagingOnDebugEvent(DebugPacket packet)
+        public void MessagingOnDebugEvent(DebugPacket packet)
         {
             _logging.Trace(packet.Message);
         }

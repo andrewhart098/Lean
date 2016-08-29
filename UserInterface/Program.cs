@@ -22,14 +22,8 @@ namespace QuantConnect.Views
 
             var port = args[0];
 
-            var desktopMessageHandler = new DesktopMessageHandler(port);
-            var form = new LeanWinForm(desktopMessageHandler);
-
-            desktopMessageHandler.ReceivedJobEvent += (packet) =>
-            {
-                form.Initialize(packet);
-            };
-
+            var form = new LeanWinForm();
+            var desktopMessageHandler = new DesktopMessageHandler(port, form);
 
             Application.Run(form);
         }

@@ -20,10 +20,10 @@ namespace QuantConnect.Messaging
         private AlgorithmNodePacket _job;
 
         // Port to send data to
-        public static readonly string Port = "1234";//Config.Get("http-port");
+        public static readonly string Port = Config.Get("http-port");
 
         // Client for sending asynchronous requests.
-        private static readonly RequestSocket Client = new RequestSocket("http://localhost:" + Port);
+        private static readonly PushSocket Client = new PushSocket("@tcp://*:" + Port);
 
 
         /// <summary>
