@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using QuantConnect.Views.WinForms;
@@ -21,10 +22,10 @@ namespace QuantConnect.Views
 
             var port = args[0];
 
-            var desktopApi = new DesktopMessageHandler(port);
-            var form = new LeanWinForm(desktopApi);
+            var desktopMessageHandler = new DesktopMessageHandler(port);
+            var form = new LeanWinForm(desktopMessageHandler);
 
-            desktopApi.ReceivedJobEvent += (packet) =>
+            desktopMessageHandler.ReceivedJobEvent += (packet) =>
             {
                 form.Initialize(packet);
             };

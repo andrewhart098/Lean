@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Net;
 using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Orders;
@@ -147,7 +146,48 @@ namespace QuantConnect.Views
 
         public void StartServer(string port)
         {
-            _server = new ResponseSocket("@tcp://localhost:5556");
+            using (var server = new ResponseSocket("@tcp://127.0.0.1:5556"))
+            {
+                while (true)
+                {
+                    var message = server.ReceiveMultipartMessage();
+
+                    var resource = message[0].ConvertToString();
+                    var packet = message[1].ConvertToString();
+
+                    switch (resource)
+                    {
+                        case "/NewLiveJob":
+                            var liveJobModel = Bind<LiveNodePacket>(packet);
+                            _handler.OnJobEvent(liveJobModel.packet);
+                            break;
+                        case "/NewBacktestingJob":
+                            var backtestJobModel = Bind<BacktestNodePacket>(packet);
+                            _handler.OnJobEvent(backtestJobModel.packet);
+                            break;
+                        case "/DebugEvent":
+                            var debugEventModel = Bind<DebugPacket>(packet);
+                            _handler.OnDebugEvent(debugEventModel.packet);
+                            break;
+                        case "/HandledErrorEvent":
+                            var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
+                            _handler.OnHandledErrorEvent(handleErrorEventModel.packet);
+                            break;
+                        case "/BacktestResultEvent":
+                            var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
+                            _handler.OnBacktestResultEvent(backtestResultEventModel.packet);
+                            break;
+                        case "/RuntimeErrorEvent":
+                            var runtimeErrorEventModel = Bind<RuntimeErrorPacket>(packet);
+                            _handler.OnRuntimeErrorEvent(runtimeErrorEventModel.packet);
+                            break;
+                        case "/LogEvent":
+                            var logEventModel = Bind<LogPacket>(packet);
+                            _handler.OnLogEvent(logEventModel.packet);
+                            break;
+                    }
+                }
+            }
         }
 
         public void StopServer()
@@ -156,30 +196,33 @@ namespace QuantConnect.Views
         }
 
 
-        public static Model<T> Bind<T>(Stream s)
+        public static Model<T> Bind<T>(string st)
         {
             try
             {
-                using (StreamReader reader = new StreamReader(s))
+                using (Stream s = GenerateStreamFromString(st))
                 {
-                    using (JsonTextReader jsonReader = new JsonTextReader(reader))
+                    using (StreamReader reader = new StreamReader(s))
                     {
-                        JsonSerializer ser = new JsonSerializer();
-
-                        // If backtest result, add custom converter
-                        if (typeof(T) == typeof(BacktestResultPacket))
+                        using (JsonTextReader jsonReader = new JsonTextReader(reader))
                         {
-                            var converter = new OrderJsonConverter();
-                            ser.Converters.Add(converter);
+                            JsonSerializer ser = new JsonSerializer();
+
+                            // If backtest result, add custom converter
+                            if (typeof(T) == typeof(BacktestResultPacket))
+                            {
+                                var converter = new OrderJsonConverter();
+                                ser.Converters.Add(converter);
+                            }
+
+                            var packet = ser.Deserialize<T>(jsonReader);
+
+                            return new Model<T>
+                            {
+                                packet = packet,
+                                Errors = false
+                            };
                         }
-
-                        var packet = ser.Deserialize<T>(jsonReader);
-
-                        return new Model<T>
-                        {
-                            packet = packet,
-                            Errors = false
-                        };
                     }
                 }
             }
@@ -187,7 +230,6 @@ namespace QuantConnect.Views
             {
                 Console.WriteLine("There was an error deserializing the request. " + ex.ToString());
             }
-
             // If we made it this far something went wrong
             return new Model<T>
             {
@@ -196,134 +238,14 @@ namespace QuantConnect.Views
             };
         }
 
-
-
-        // Routes
-        public sealed class Resources : RESTResource
+        public static Stream GenerateStreamFromString(string s)
         {
-            // POST routes
-
-            // Debug endpoint
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewLiveJob")]
-            public void ReceiveNewLiveJobEvent(HttpListenerContext context)
-            {
-                var model = Bind<LiveNodePacket>(context.Request.InputStream);
-
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnJobEvent(model.packet);
-                }
-            }
-
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/NewBacktestingJob")]
-            public void ReceiveNewBacktestingJobEvent(HttpListenerContext context)
-            {
-                var model = Bind<BacktestNodePacket>(context.Request.InputStream);
-
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnJobEvent(model.packet);
-                }
-            }
-
-            // Debug endpoint
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/DebugEvent")]
-            public void ReceiveDebugEvent(HttpListenerContext context)
-            {
-                var model = Bind<DebugPacket>(context.Request.InputStream);
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnDebugEvent(model.packet);
-                }
-            }
-
-            // Error endpoint
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/HandledErrorEvent")]
-            public void ReceiveHandledErrorEvent(HttpListenerContext context)
-            {
-                var model = Bind<HandledErrorPacket>(context.Request.InputStream);
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnHandledErrorEvent(model.packet);
-                }
-                SendTextResponse(context, "Success");
-            }
-
-
-            // Backtest endpoint
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/BacktestResultEvent")]
-            public void ReceiveBacktestResultEvent(HttpListenerContext context)
-            {
-                var model = Bind<BacktestResultPacket>(context.Request.InputStream);
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnBacktestResultEvent(model.packet);
-                }
-            }
-
-            // Runtime Error endpoint
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/RuntimeErrorEvent")]
-            public void ReceiveRuntimeErrorEvent(HttpListenerContext context)
-            {
-                var model = Bind<RuntimeErrorPacket>(context.Request.InputStream);
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnRuntimeErrorEvent(model.packet);
-                }
-            }
-
-            // Log endpoint
-            [RESTRoute(Method = HttpMethod.POST, PathInfo = @"^/LogEvent")]
-            public void ReceiveLogEvent(HttpListenerContext context)
-            {
-                var model = Bind<LogPacket>(context.Request.InputStream);
-                if (model.Errors)
-                {
-                    InternalServerError(context);
-                }
-                else
-                {
-                    SendTextResponse(context, "Success");
-                    _handler.OnLogEvent(model.packet);
-                }
-            }
-
-            // GET routes
-            [RESTRoute]
-            public void Heartbeat(HttpListenerContext context)
-            {
-                this.SendTextResponse(context, "Server is alive!");
-            }
+            MemoryStream stream = new MemoryStream();
+            StreamWriter writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
         }
     }
 
