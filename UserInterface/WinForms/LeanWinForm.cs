@@ -45,7 +45,6 @@ namespace QuantConnect.Views.WinForms
             Gecko.Xpcom.Initialize();
 
             _geckoBrowser = new GeckoWebBrowser { Dock = DockStyle.Fill, Name = "browser" };
-            _geckoBrowser.DOMContentLoaded += BrowserOnDomContentLoaded;
             splitPanel.Panel1.Controls.Add(_geckoBrowser);
 #else
             // MONO WEB BROWSER: Create the browser control
