@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using Newtonsoft.Json;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using NetMQ;
 using NetMQ.Sockets;
+using QuantConnect.Messaging;
 using QuantConnect.Views.WinForms;
 
 namespace QuantConnect.Views
@@ -33,33 +33,39 @@ namespace QuantConnect.Views
 
                     switch (resource)
                     {
-                        case "/NewLiveJob":
+                        case Resources.LiveJob:
                             var liveJobModel = Bind<LiveNodePacket>(packet);
-                            form.Initialize(liveJobModel.Packet);
+                            if (!liveJobModel.Errors)
+                                form.Initialize(liveJobModel.Packet);
                             break;
-                        case "/NewBacktestingJob":
+                        case Resources.BacktestJob:
                             var backtestJobModel = Bind<BacktestNodePacket>(packet);
-                            form.Initialize(backtestJobModel.Packet);
+                            if (!backtestJobModel.Errors)
+                                form.Initialize(backtestJobModel.Packet);
                             break;
-                        case "/DebugEvent":
+                        case Resources.Debug:
                             var debugEventModel = Bind<DebugPacket>(packet);
-                            form.MessagingOnDebugEvent(debugEventModel.Packet);
+                            if (!debugEventModel.Errors)
+                                form.MessagingOnDebugEvent(debugEventModel.Packet);
                             break;
-                        case "/HandledErrorEvent":
+                        case Resources.HandledError:
                             var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
                             form.MessagingOnHandledErrorEvent(handleErrorEventModel.Packet);
                             break;
-                        case "/BacktestResultEvent":
+                        case Resources.BacktestResult:
                             var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
-                            form.MessagingOnBacktestResultEvent(backtestResultEventModel.Packet);
+                            if (!backtestResultEventModel.Errors)
+                                form.MessagingOnBacktestResultEvent(backtestResultEventModel.Packet);
                             break;
-                        case "/RuntimeErrorEvent":
+                        case Resources.RuntimeError:
                             var runtimeErrorEventModel = Bind<RuntimeErrorPacket>(packet);
-                            form.MessagingOnRuntimeErrorEvent(runtimeErrorEventModel.Packet);
+                            if (!runtimeErrorEventModel.Errors)
+                                form.MessagingOnRuntimeErrorEvent(runtimeErrorEventModel.Packet);
                             break;
-                        case "/LogEvent":
+                        case Resources.Log:
                             var logEventModel = Bind<LogPacket>(packet);
-                            form.MessagingOnLogEvent(logEventModel.Packet);
+                            if (!logEventModel.Errors)
+                                form.MessagingOnLogEvent(logEventModel.Packet);
                             break;
                     }
                 }
