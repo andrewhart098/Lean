@@ -141,11 +141,12 @@ namespace QuantConnect.Messaging
         /// <param name="resource">The resource where the packet will be sent</param>
         public static void Transmit(Packet packet, string resource)
         {
-            var tx = JsonConvert.SerializeObject(packet);
+            var payload = JsonConvert.SerializeObject(packet);
+
             var message = new NetMQMessage();
 
             message.Append(resource);
-            message.Append(tx);
+            message.Append(payload);
 
             Client.SendMultipartMessage(message);
         }
