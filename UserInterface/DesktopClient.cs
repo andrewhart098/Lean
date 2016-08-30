@@ -50,7 +50,8 @@ namespace QuantConnect.Views
                             break;
                         case Resources.HandledError:
                             var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
-                            handler.DisplayHandledErrorPacket(handleErrorEventModel.Packet);
+                            if (!handleErrorEventModel.Errors)
+                                handler.DisplayHandledErrorPacket(handleErrorEventModel.Packet);
                             break;
                         case Resources.BacktestResult:
                             var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
