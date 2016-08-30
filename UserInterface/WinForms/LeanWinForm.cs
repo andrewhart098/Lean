@@ -12,7 +12,7 @@ using Gecko.JQuery;
 
 namespace QuantConnect.Views.WinForms
 {
-    public partial class LeanWinForm : Form
+    public partial class LeanWinForm : Form, IDesktopMessageHandler
     {
         private readonly GeckoWebBrowser _geckoBrowser;
         private readonly WebBrowser _monoBrowser;
@@ -81,60 +81,11 @@ namespace QuantConnect.Views.WinForms
 
         }
 
-
-        /// <summary>
-        /// Get the URL for the embedded charting
-        /// </summary>
-        /// <param name="job">Job packet for the URL</param>
-        /// <param name="liveMode">Is this a live mode chart?</param>
-        /// <param name="holdReady">Hold the ready signal to inject data</param>
-        private static string GetUrl(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
-        {
-            var url = "";
-            var hold = holdReady == false ? "0" : "1";
-            var embedPage = liveMode ? "embeddedLive" : "embedded";
-
-            url = string.Format(
-                "https://www.quantconnect.com/terminal/{0}?user={1}&token={2}&pid={3}&version={4}&holdReady={5}&bid={6}",
-                embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
-
-            return url;
-        }
-
-        /// <summary>
-        /// Update the status label at the bottom of the form
-        /// </summary>
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            StatisticsToolStripStatusLabel.Text = string.Concat("Performance: CPU: ", OS.CpuUsage.NextValue().ToString("0.0"), "%",
-                                                                " Ram: ", OS.TotalPhysicalMemoryUsed, " Mb");
-
-            if (_logging == null) return;
-
-            LogEntry log;
-            while (_logging.Logs.TryDequeue(out log))
-            {
-                switch (log.MessageType)
-                {
-                    case LogType.Debug:
-                        LogTextBox.AppendText(log.ToString(), Color.Black);
-                        break;
-                    default:
-                    case LogType.Trace:
-                        LogTextBox.AppendText(log.ToString(), Color.Black);
-                        break;
-                    case LogType.Error:
-                        LogTextBox.AppendText(log.ToString(), Color.DarkRed);
-                        break;
-                }
-            }
-        }
-
         /// <summary>
         /// Backtest result packet
         /// </summary>
         /// <param name="packet"></param>
-        public void MessagingOnBacktestResultEvent(BacktestResultPacket packet)
+        public void DisplayBacktestResultsPacket(BacktestResultPacket packet)
         {
             if (packet.Progress != 1) return;
 
@@ -185,7 +136,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Display a handled error
         /// </summary>
-        public void MessagingOnHandledErrorEvent(HandledErrorPacket packet)
+        public void DisplayHandledErrorPacket(HandledErrorPacket packet)
         {
             var hstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
             _logging.Error(packet.Message + hstack);
@@ -194,7 +145,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Display a runtime error
         /// </summary>
-        public void MessagingOnRuntimeErrorEvent(RuntimeErrorPacket packet)
+        public void DisplayRuntimeErrorPacket(RuntimeErrorPacket packet)
         {
             var rstack = (!string.IsNullOrEmpty(packet.StackTrace) ? (Environment.NewLine + " " + packet.StackTrace) : string.Empty);
             _logging.Error(packet.Message + rstack);
@@ -203,7 +154,7 @@ namespace QuantConnect.Views.WinForms
         /// <summary>
         /// Display a log packet
         /// </summary>
-        public void MessagingOnLogEvent(LogPacket packet)
+        public void DisplayLogPacket(LogPacket packet)
         {
             _logging.Trace(packet.Message);
         }
@@ -212,9 +163,57 @@ namespace QuantConnect.Views.WinForms
         /// Display a debug packet
         /// </summary>
         /// <param name="packet"></param>
-        public void MessagingOnDebugEvent(DebugPacket packet)
+        public void DisplayDebugPacket(DebugPacket packet)
         {
             _logging.Trace(packet.Message);
+        }
+
+        /// <summary>
+        /// Get the URL for the embedded charting
+        /// </summary>
+        /// <param name="job">Job packet for the URL</param>
+        /// <param name="liveMode">Is this a live mode chart?</param>
+        /// <param name="holdReady">Hold the ready signal to inject data</param>
+        private static string GetUrl(AlgorithmNodePacket job, bool liveMode = false, bool holdReady = false)
+        {
+            var url = "";
+            var hold = holdReady == false ? "0" : "1";
+            var embedPage = liveMode ? "embeddedLive" : "embedded";
+
+            url = string.Format(
+                "https://www.quantconnect.com/terminal/{0}?user={1}&token={2}&pid={3}&version={4}&holdReady={5}&bid={6}",
+                embedPage, job.UserId, job.Channel, job.ProjectId, Globals.Version, hold, job.AlgorithmId);
+
+            return url;
+        }
+
+        /// <summary>
+        /// Update the status label at the bottom of the form
+        /// </summary>
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            StatisticsToolStripStatusLabel.Text = string.Concat("Performance: CPU: ", OS.CpuUsage.NextValue().ToString("0.0"), "%",
+                                                                " Ram: ", OS.TotalPhysicalMemoryUsed, " Mb");
+
+            if (_logging == null) return;
+
+            LogEntry log;
+            while (_logging.Logs.TryDequeue(out log))
+            {
+                switch (log.MessageType)
+                {
+                    case LogType.Debug:
+                        LogTextBox.AppendText(log.ToString(), Color.Black);
+                        break;
+                    default:
+                    case LogType.Trace:
+                        LogTextBox.AppendText(log.ToString(), Color.Black);
+                        break;
+                    case LogType.Error:
+                        LogTextBox.AppendText(log.ToString(), Color.DarkRed);
+                        break;
+                }
+            }
         }
 
         /// <summary>

@@ -10,14 +10,14 @@ using QuantConnect.Views.WinForms;
 
 namespace QuantConnect.Views
 {
-    public class DesktopMessageHandler
+    public class DesktopClient
     {
         /// <summary>
         /// This 0MQ Pull socket accepts certain messages from a 0MQ Push socket
         /// </summary>
         /// <param name="port">The port on which to listen</param>
-        /// <param name="form">The form on which to push responses</param>
-        public void StartMessageHandler(string port, LeanWinForm form)
+        /// <param name="handler">The handler which will display the repsonses</param>
+        public void Run(string port, IDesktopMessageHandler handler)
         {
             using (var pullSocket = new PullSocket(">tcp://localhost:" + port))
             {
@@ -36,36 +36,36 @@ namespace QuantConnect.Views
                         case Resources.LiveJob:
                             var liveJobModel = Bind<LiveNodePacket>(packet);
                             if (!liveJobModel.Errors)
-                                form.Initialize(liveJobModel.Packet);
+                                handler.Initialize(liveJobModel.Packet);
                             break;
                         case Resources.BacktestJob:
                             var backtestJobModel = Bind<BacktestNodePacket>(packet);
                             if (!backtestJobModel.Errors)
-                                form.Initialize(backtestJobModel.Packet);
+                                handler.Initialize(backtestJobModel.Packet);
                             break;
                         case Resources.Debug:
                             var debugEventModel = Bind<DebugPacket>(packet);
                             if (!debugEventModel.Errors)
-                                form.MessagingOnDebugEvent(debugEventModel.Packet);
+                                handler.DisplayDebugPacket(debugEventModel.Packet);
                             break;
                         case Resources.HandledError:
                             var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
-                            form.MessagingOnHandledErrorEvent(handleErrorEventModel.Packet);
+                            handler.DisplayHandledErrorPacket(handleErrorEventModel.Packet);
                             break;
                         case Resources.BacktestResult:
                             var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
                             if (!backtestResultEventModel.Errors)
-                                form.MessagingOnBacktestResultEvent(backtestResultEventModel.Packet);
+                                handler.DisplayBacktestResultsPacket(backtestResultEventModel.Packet);
                             break;
                         case Resources.RuntimeError:
                             var runtimeErrorEventModel = Bind<RuntimeErrorPacket>(packet);
                             if (!runtimeErrorEventModel.Errors)
-                                form.MessagingOnRuntimeErrorEvent(runtimeErrorEventModel.Packet);
+                                handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel.Packet);
                             break;
                         case Resources.Log:
                             var logEventModel = Bind<LogPacket>(packet);
                             if (!logEventModel.Errors)
-                                form.MessagingOnLogEvent(logEventModel.Packet);
+                                handler.DisplayLogPacket(logEventModel.Packet);
                             break;
                     }
                 }

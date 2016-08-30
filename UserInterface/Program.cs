@@ -24,9 +24,9 @@ namespace QuantConnect.Views
 
             var form = new LeanWinForm();
 
-            var desktopMessageHandler = new DesktopMessageHandler();
+            var desktopMessageHandler = new DesktopClient();
 
-            var thread = new Thread(() => desktopMessageHandler.StartMessageHandler(port, form));
+            var thread = new Thread(() => desktopMessageHandler.Run(port, form));
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
 
