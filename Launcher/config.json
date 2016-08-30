@@ -182,7 +182,7 @@
         "messaging-handler": "QuantConnect.Messaging.ZeroMQMessageHandler",
         "log-handler": "QuantConnect.Logging.QueueLogHandler",
         "http-port": "1234",
-        "desktop-exe": ".\\..\\..\\..\\UserInterface\\bin\\Debug\\QuantConnect.Views.exe"
+        "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     },
 
     // defines the 'live-desktop' environment
@@ -207,7 +207,7 @@
         "messaging-handler": "QuantConnect.Messaging.ZeroMQMessageHandler",
         "log-handler": "QuantConnect.Logging.QueueLogHandler",
         "http-port": "1234",
-        "desktop-exe": ".\\..\\..\\..\\UserInterface\\bin\\Release\\QuantConnect.Views.exe"
+        "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
     }
   }
 }

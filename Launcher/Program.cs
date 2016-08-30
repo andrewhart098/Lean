@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
@@ -89,8 +90,9 @@ namespace QuantConnect.Lean.Launcher
 
             if (environment.EndsWith("-desktop"))
             {
-                string strLoc = Config.Get("desktop-exe");
-                Process.Start(strLoc, Config.Get("http-port"));
+                // Handle both Linux and Windows paths
+                var exePath = Config.Get("desktop-exe").Replace('/', Path.DirectorySeparatorChar);
+                Process.Start(exePath, Config.Get("http-port"));
             }
 
             // log the job endpoints
