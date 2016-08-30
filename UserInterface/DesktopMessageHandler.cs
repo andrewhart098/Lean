@@ -19,11 +19,11 @@ namespace QuantConnect.Views
         /// <param name="form">The form on which to push responses</param>
         public void StartMessageHandler(string port, LeanWinForm form)
         {
-            using (var server = new PullSocket(">tcp://localhost:" + port))
+            using (var pullSocket = new PullSocket(">tcp://localhost:" + port))
             {
                 while (true)
                 {
-                    var message  = server.ReceiveMultipartMessage();
+                    var message  = pullSocket.ReceiveMultipartMessage();
 
                     // There should only be 2 part messages
                     if (message.FrameCount != 2) continue;

@@ -10,6 +10,19 @@ using NetMQ.Sockets;
 namespace QuantConnect.Messaging
 {
     /// <summary>
+    /// Resources used to distinguish Packet types by ZeroMQ
+    /// </summary>
+    public static class Resources
+    {
+        public const string Debug = "/DebugEvent";
+        public const string Log = "/LogEvent";
+        public const string BacktestResult = "/BacktestResultEvent";
+        public const string BacktestJob = "/NewBacktestingJob";
+        public const string LiveJob = "/NewLiveJob";
+        public const string HandledError = "/HandledErrorEvent";
+        public const string RuntimeError = "/RuntimeErrorEvent";
+    }
+    /// <summary>
     /// Message handler that sends messages over tcp using NetMQ.
     /// </summary>
     public class StreamingMessageHandler : IMessagingHandler
@@ -43,9 +56,9 @@ namespace QuantConnect.Messaging
 
             if (_job is LiveNodePacket)
             {
-                Transmit(_job, "/NewLiveJob");
+                Transmit(_job, Resources.LiveJob);
             }
-            Transmit(_job, "/NewBacktestingJob");
+            Transmit(_job, Resources.BacktestJob);
         }
 
         /// <summary>
@@ -105,27 +118,27 @@ namespace QuantConnect.Messaging
 
         private void SendBacktestResultEvent(BacktestResultPacket packet)
         {
-            Transmit(packet, "/BacktestResultEvent");
+            Transmit(packet, Resources.BacktestResult);
         }
 
         private void SendHandledErrorEvent(HandledErrorPacket packet)
         {
-            Transmit(packet, "/HandledErrorEvent");
+            Transmit(packet, Resources.HandledError);
         }
 
         private void SendRuntimeErrorEvent(RuntimeErrorPacket packet)
         {
-            Transmit(packet, "/RuntimeErrorEvent");
+            Transmit(packet, Resources.RuntimeError);
         }
 
         private void SendLogEvent(LogPacket packet)
         {
-            Transmit(packet, "/LogEvent");
+            Transmit(packet, Resources.Log);
         }
 
         private void SendDebugEvent(DebugPacket packet)
         {
-            Transmit(packet, "/DebugEvent");
+            Transmit(packet, Resources.Debug);
         }
 
 
