@@ -14,17 +14,16 @@ namespace QuantConnect.Views.WinForms
 {
     public partial class LeanWinForm : Form
     {
+        private readonly GeckoWebBrowser _geckoBrowser;
         private readonly WebBrowser _monoBrowser;
         private readonly QueueLogHandler _logging;
         
-        private GeckoWebBrowser _geckoBrowser;
         private bool _liveMode = false;
         private AlgorithmNodePacket _job;
 
         /// <summary>
         /// Create the UX.
         /// </summary>
-        /// <param name="notificationHandler">Messaging system</param>
         public LeanWinForm()
         {
             InitializeComponent();
@@ -52,8 +51,8 @@ namespace QuantConnect.Views.WinForms
             _logging = new QueueLogHandler();
         }
 
-        // <summary>
-        /// This method is called when a new job is received
+        /// <summary>
+        /// This method is called when a new job is received.
         /// </summary>
         /// <param name="job">The job that is being executed</param>
         public void Initialize(AlgorithmNodePacket job)
