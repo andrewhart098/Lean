@@ -82,9 +82,9 @@ namespace QuantConnect.Views.WinForms
         }
 
         /// <summary>
-        /// Backtest result packet
+        /// Displays the Backtest results packet
         /// </summary>
-        /// <param name="packet"></param>
+        /// <param name="packet">Backtest results</param>
         public void DisplayBacktestResultsPacket(BacktestResultPacket packet)
         {
             if (packet.Progress != 1) return;
