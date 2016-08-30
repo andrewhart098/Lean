@@ -23,7 +23,12 @@ namespace QuantConnect.Views
             var port = args[0];
 
             var form = new LeanWinForm();
-            var desktopMessageHandler = new DesktopMessageHandler(port, form);
+
+            var desktopMessageHandler = new DesktopMessageHandler();
+
+            var thread = new Thread(() => desktopMessageHandler.StartMessageHandler(port, form));
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
 
             Application.Run(form);
         }
