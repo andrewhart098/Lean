@@ -12,17 +12,12 @@ namespace QuantConnect.Messaging
     /// <summary>
     /// Message handler that sends messages over tcp using NetMQ.
     /// </summary>
-    public class ZeroMQMessageHandler : IMessagingHandler
+    public class StreamingMessageHandler : IMessagingHandler
     {
+        private string _port;
+        private PushSocket _client;
         private AlgorithmNodePacket _job;
-
-        // Port to send data to
-        public static readonly string Port = Config.Get("http-port");
-
-        // Client for sending asynchronous requests.
-        private static readonly PushSocket Client = new PushSocket("@tcp://*:" + Port);
-
-
+        
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
         /// This is not used in this message handler.  Messages are sent via http as they arrive
@@ -34,7 +29,8 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Initialize()
         {
-            //
+            _port   = Config.Get("http-port");
+            _client = new PushSocket("@tcp://*:" + _port);
         }
 
         /// <summary>
@@ -135,11 +131,11 @@ namespace QuantConnect.Messaging
 
 
         /// <summary>
-        /// Send a message to the Client using ZeroMQ
+        /// Send a message to the _client using ZeroMQ
         /// </summary>
         /// <param name="packet">Packet to transmit</param>
         /// <param name="resource">The resource where the packet will be sent</param>
-        public static void Transmit(Packet packet, string resource)
+        public void Transmit(Packet packet, string resource)
         {
             var payload = JsonConvert.SerializeObject(packet);
 
@@ -148,7 +144,7 @@ namespace QuantConnect.Messaging
             message.Append(resource);
             message.Append(payload);
 
-            Client.SendMultipartMessage(message);
+            _client.SendMultipartMessage(message);
         }
     }
 }
