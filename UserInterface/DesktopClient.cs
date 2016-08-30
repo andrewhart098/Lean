@@ -6,12 +6,12 @@ using QuantConnect.Packets;
 using NetMQ;
 using NetMQ.Sockets;
 using QuantConnect.Messaging;
-using QuantConnect.Views.WinForms;
 
 namespace QuantConnect.Views
 {
     public class DesktopClient
     {
+        private bool _stopServer = false;
         /// <summary>
         /// This 0MQ Pull socket accepts certain messages from a 0MQ Push socket
         /// </summary>
@@ -21,7 +21,7 @@ namespace QuantConnect.Views
         {
             using (var pullSocket = new PullSocket(">tcp://localhost:" + port))
             {
-                while (true)
+                while (!_stopServer)
                 {
                     var message  = pullSocket.ReceiveMultipartMessage();
 
@@ -71,6 +71,14 @@ namespace QuantConnect.Views
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Stop the running of the loop
+        /// </summary>
+        public void StopServer()
+        {
+            _stopServer = true;
         }
 
         /// <summary>

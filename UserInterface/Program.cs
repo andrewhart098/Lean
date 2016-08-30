@@ -24,13 +24,17 @@ namespace QuantConnect.Views
 
             var form = new LeanWinForm();
 
-            var desktopMessageHandler = new DesktopClient();
+            var desktopClient = new DesktopClient();
 
-            var thread = new Thread(() => desktopMessageHandler.Run(port, form));
+            var thread = new Thread(() => desktopClient.Run(port, form));
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
 
             Application.Run(form);
+
+            // The above code is blocking.
+            // Once it finishes, close the NetMQ client
+            desktopClient.StopServer();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace QuantConnect.Messaging
     public class StreamingMessageHandler : IMessagingHandler
     {
         private string _port;
-        private PushSocket _client;
+        private PushSocket _server;
         private AlgorithmNodePacket _job;
         
         /// <summary>
@@ -43,7 +43,7 @@ namespace QuantConnect.Messaging
         public void Initialize()
         {
             _port   = Config.Get("http-port");
-            _client = new PushSocket("@tcp://*:" + _port);
+            _server = new PushSocket("@tcp://*:" + _port);
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace QuantConnect.Messaging
 
 
         /// <summary>
-        /// Send a message to the _client using ZeroMQ
+        /// Send a message to the _server using ZeroMQ
         /// </summary>
         /// <param name="packet">Packet to transmit</param>
         /// <param name="resource">The resource where the packet will be sent</param>
@@ -157,7 +157,7 @@ namespace QuantConnect.Messaging
             message.Append(resource);
             message.Append(payload);
 
-            _client.SendMultipartMessage(message);
+            _server.SendMultipartMessage(message);
         }
     }
 }
