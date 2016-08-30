@@ -33,7 +33,7 @@ namespace QuantConnect.Messaging
         
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
-        /// This is not used in this message handler.  Messages are sent via http as they arrive
+        /// This is not used in this message handler.  Messages are sent via tcp as they arrive
         /// </summary>
         public bool HasSubscribers { get; set; }
 
