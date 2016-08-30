@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Messaging
         [Test]
         public void MessageHandler_WillSend_MultipartMessage()
         {
-            var resource = "/LogEvent";
+            var resource = Resources.Log;
 
             using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
             {
@@ -113,6 +113,7 @@ namespace QuantConnect.Tests.Messaging
         public void MessageHandler_WillSend_NewBackTestJob_ToCorrectRoute()
         {
             var backtest = new BacktestNodePacket();
+
             using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
             {
                 _messageHandler.SetAuthentication(backtest);
