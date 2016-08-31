@@ -12,6 +12,7 @@ namespace QuantConnect.Views
     public class DesktopClient
     {
         private bool _stopServer = false;
+
         /// <summary>
         /// This 0MQ Pull socket accepts certain messages from a 0MQ Push socket
         /// </summary>
@@ -19,6 +20,12 @@ namespace QuantConnect.Views
         /// <param name="handler">The handler which will display the repsonses</param>
         public void Run(string port, IDesktopMessageHandler handler)
         {
+            //Allow proper decoding of orders.
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
+            {
+                Converters = { new OrderJsonConverter() }
+            };
+
             using (var pullSocket = new PullSocket(">tcp://localhost:" + port))
             {
                 while (!_stopServer)
@@ -34,57 +41,50 @@ namespace QuantConnect.Views
 
                     if (typeof(LiveNodePacket).Name == resource)
                     {
-                        var liveJobModel = Bind<LiveNodePacket>(packet);
-                        if (!liveJobModel.Errors)
-                            handler.Initialize(liveJobModel.Packet);
+                        var liveJobModel = JsonConvert.DeserializeObject<LiveNodePacket>(packet);
+                        handler.Initialize(liveJobModel);
                         continue;
                     }
                     if (typeof(BacktestNodePacket).Name == resource)
                     {
-                        var backtestJobModel = Bind<BacktestNodePacket>(packet);
-                        if (!backtestJobModel.Errors)
-                            handler.Initialize(backtestJobModel.Packet);
+                        var backtestJobModel = JsonConvert.DeserializeObject<BacktestNodePacket>(packet);
+                        handler.Initialize(backtestJobModel);
                         continue;
                     }
                     if (typeof(DebugPacket).Name == resource)
                     {
-                        var debugEventModel = Bind<DebugPacket>(packet);
-                        if (!debugEventModel.Errors)
-                            handler.DisplayDebugPacket(debugEventModel.Packet);
+                        var debugEventModel = JsonConvert.DeserializeObject<DebugPacket>(packet);
+                        handler.DisplayDebugPacket(debugEventModel);
                         continue;
                     }
 
                     if (typeof(HandledErrorPacket).Name == resource)
                     {
-                        var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
-                        if (!handleErrorEventModel.Errors)
-                            handler.DisplayHandledErrorPacket(handleErrorEventModel.Packet);
+                        var handleErrorEventModel = JsonConvert.DeserializeObject<HandledErrorPacket>(packet);
+                        handler.DisplayHandledErrorPacket(handleErrorEventModel);
                         continue;
                     }
 
                     if (typeof(BacktestResultPacket).Name == resource)
                     {
-                        var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
-                        if (!backtestResultEventModel.Errors)
-                            handler.DisplayBacktestResultsPacket(backtestResultEventModel.Packet);
+                        var backtestResultEventModel = JsonConvert.DeserializeObject<BacktestResultPacket>(packet);
+                        handler.DisplayBacktestResultsPacket(backtestResultEventModel);
                         continue;
                     }
 
 
                     if (typeof(RuntimeErrorPacket).Name == resource)
                     {
-                        var runtimeErrorEventModel = Bind<RuntimeErrorPacket>(packet);
-                        if (!runtimeErrorEventModel.Errors)
-                            handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel.Packet);
+                        var runtimeErrorEventModel = JsonConvert.DeserializeObject<RuntimeErrorPacket>(packet);
+                        handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel);
                         continue;
                     }
 
 
                     if (typeof(LogPacket).Name == resource)
                     {
-                        var logEventModel = Bind<LogPacket>(packet);
-                        if (!logEventModel.Errors)
-                            handler.DisplayLogPacket(logEventModel.Packet);
+                        var logEventModel = JsonConvert.DeserializeObject<LogPacket>(packet);
+                        handler.DisplayLogPacket(logEventModel);
                     }
                 }
             }
@@ -96,81 +96,6 @@ namespace QuantConnect.Views
         public void StopServer()
         {
             _stopServer = true;
-        }
-
-        /// <summary>
-        /// This method deserializes the incoming stream to a specific type
-        /// </summary>
-        /// <typeparam name="T">The type of Packet that we are deserialiing into</typeparam>
-        /// <param name="st">The payload of the message from the 0MQ Push Socket</param>
-        /// <returns>The </returns>
-        public static Model<T> Bind<T>(string st)
-        {
-            try
-            {
-                using (Stream s = GenerateStreamFromString(st))
-                {
-                    using (StreamReader reader = new StreamReader(s))
-                    {
-                        using (JsonTextReader jsonReader = new JsonTextReader(reader))
-                        {
-                            JsonSerializer ser = new JsonSerializer();
-
-                            // If backtest result, add custom converter
-                            if (typeof(T) == typeof(BacktestResultPacket))
-                            {
-                                var converter = new OrderJsonConverter();
-                                ser.Converters.Add(converter);
-                            }
-
-                            var packet = ser.Deserialize<T>(jsonReader);
-
-                            return new Model<T>
-                            {
-                                Packet = packet,
-                                Errors = false
-                            };
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("There was an error deserializing the request. " + ex.ToString());
-            }
-
-            // If we made it this far something went wrong
-            return new Model<T>
-            {
-                Packet = default(T),
-                Errors = true
-            };
-        }
-
-        /// <summary>
-        /// Generates a Stream from a string.
-        /// Taken from http://stackoverflow.com/questions/1879395/how-to-generate-a-stream-from-a-string
-        /// </summary>
-        /// <param name="s">The string to turn into a stream</param>
-        /// <returns>A sequence of bytes representing the string passed into the method</returns>
-        public static Stream GenerateStreamFromString(string s)
-        {
-            MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream);
-            writer.Write(s);
-            writer.Flush();
-            stream.Position = 0;
-            return stream;
-        }
-
-        /// <summary>
-        /// A class representing the multipart message in 0MQ
-        /// </summary>
-        /// <typeparam name="T">The type of packet that this model represents</typeparam>
-        public class Model<T>
-        {
-            public T Packet { get; set; }
-            public bool Errors { get; set; }
         }
     }
 }
