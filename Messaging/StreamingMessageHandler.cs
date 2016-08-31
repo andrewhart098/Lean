@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Net;
+using System.Net.Sockets;
+using Newtonsoft.Json;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -42,7 +45,8 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Initialize()
         {
-            _port   = Config.Get("http-port");
+            _port   = Config.Get("desktop-http-port");
+            CheckPort();
             _server = new PushSocket("@tcp://*:" + _port);
         }
 
@@ -158,6 +162,24 @@ namespace QuantConnect.Messaging
             message.Append(payload);
 
             _server.SendMultipartMessage(message);
+        }
+
+        /// <summary>
+        /// Check if port to be used by the desktop application is available.
+        /// </summary>
+        private void CheckPort()
+        {
+            try
+            {
+                TcpListener tcpListener = new TcpListener(IPAddress.Any, _port.ToInt32());
+                tcpListener.Start();
+                tcpListener.Stop();
+            }
+            catch
+            {
+                throw new Exception("The port configured in config.json is either being used or blocked by a firewall." +
+                    "Please choose a new port or open the port in the firewall.");
+            }
         }
     }
 }

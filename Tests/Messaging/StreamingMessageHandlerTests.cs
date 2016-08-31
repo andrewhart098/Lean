@@ -18,7 +18,7 @@ namespace QuantConnect.Tests.Messaging
         [TestFixtureSetUp]
         public void SetUp()
         {
-            Config.Set("http-port", _port);
+            Config.Set("desktop-http-port", _port);
 
             _messageHandler = new StreamingMessageHandler();
             _messageHandler.Initialize();

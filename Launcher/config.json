@@ -181,7 +181,7 @@
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler",
         "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
         "log-handler": "QuantConnect.Logging.QueueLogHandler",
-        "http-port": "1234",
+        "desktop-http-port": "1234",
         "desktop-exe": "../../../UserInterface/bin/Debug/QuantConnect.Views.exe"
     },
 
@@ -206,7 +206,7 @@
         "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
         "messaging-handler": "QuantConnect.Messaging.StreamingMessageHandler",
         "log-handler": "QuantConnect.Logging.QueueLogHandler",
-        "http-port": "1234",
+        "desktop-http-port": "1234",
         "desktop-exe": "../../../UserInterface/bin/Release/QuantConnect.Views.exe"
     }
   }

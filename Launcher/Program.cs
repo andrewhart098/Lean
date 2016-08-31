@@ -18,6 +18,8 @@ using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
 using QuantConnect.Configuration;
@@ -92,7 +94,7 @@ namespace QuantConnect.Lean.Launcher
             {
                 // Handle both Linux and Windows paths
                 var exePath = Config.Get("desktop-exe").Replace('/', Path.DirectorySeparatorChar);
-                Process.Start(exePath, Config.Get("http-port"));
+                Process.Start(exePath, Config.Get("desktop-http-port"));
             }
 
             // log the job endpoints
@@ -136,14 +138,6 @@ namespace QuantConnect.Lean.Launcher
                 leanEngineAlgorithmHandlers.Dispose();
                 Log.LogHandler.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Form launcher method for thread.
-        /// </summary>
-        static void LaunchUX()
-        {
-            
         }
     }
 }
