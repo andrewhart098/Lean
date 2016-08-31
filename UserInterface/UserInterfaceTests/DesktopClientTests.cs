@@ -85,7 +85,7 @@ namespace QuantConnect.Views.UserInterfaceTests
             {
                 var message = new NetMQMessage();
 
-                message.Append(typeof(LiveNodePacket).Name);
+                message.Append(typeof(LogPacket).Name);
                 message.Append(JsonConvert.SerializeObject(new LogPacket()));
 
                 server.SendMultipartMessage(message);
