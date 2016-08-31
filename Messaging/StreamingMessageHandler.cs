@@ -77,27 +77,27 @@ namespace QuantConnect.Messaging
             {
                 case PacketType.Debug:
                     var debug = (DebugPacket)packet;
-                    SendDebugEvent(debug);
+                    Transmit(debug, typeof(DebugPacket).Name);
                     break;
 
                 case PacketType.Log:
                     var log = (LogPacket)packet;
-                    SendLogEvent(log);
+                    Transmit(log, typeof(LogPacket).Name);
                     break;
 
                 case PacketType.RuntimeError:
                     var runtime = (RuntimeErrorPacket)packet;
-                    SendRuntimeErrorEvent(runtime);
+                    Transmit(runtime, typeof(RuntimeErrorPacket).Name);
                     break;
 
                 case PacketType.HandledError:
                     var handled = (HandledErrorPacket)packet;
-                    SendHandledErrorEvent(handled);
+                    Transmit(handled, typeof(HandledErrorPacket).Name);
                     break;
 
                 case PacketType.BacktestResult:
                     var result = (BacktestResultPacket)packet;
-                    SendBacktestResultEvent(result);
+                    Transmit(result, typeof(BacktestResultPacket).Name);
                     break;
             }
 
@@ -106,33 +106,6 @@ namespace QuantConnect.Messaging
                 StreamingApi.Transmit(_job.UserId, _job.Channel, packet);
             }
         }
-
-        private void SendBacktestResultEvent(BacktestResultPacket packet)
-        {
-            Transmit(packet, typeof(BacktestResultPacket).Name);
-        }
-
-        private void SendHandledErrorEvent(HandledErrorPacket packet)
-        {
-            Transmit(packet, typeof(HandledErrorPacket).Name);
-        }
-
-        private void SendRuntimeErrorEvent(RuntimeErrorPacket packet)
-        {
-            Transmit(packet, typeof(RuntimeErrorPacket).Name);
-        }
-
-        private void SendLogEvent(LogPacket packet)
-        {
-            Transmit(packet, typeof(LogPacket).Name);
-        }
-
-        private void SendDebugEvent(DebugPacket packet)
-        {
-            Transmit(packet, typeof(DebugPacket).Name);
-        }
-
-
 
         /// <summary>
         /// Send a message to the _server using ZeroMQ
