@@ -33,7 +33,7 @@ namespace QuantConnect.Tests.Messaging
         [Test]
         public void MessageHandler_WillSend_MultipartMessage()
         {
-            var resource = Resources.Log;
+            var resource = typeof(LogPacket).Name;
 
             using (var pullSocket = new PullSocket(">tcp://localhost:" + _port))
             {
@@ -85,24 +85,20 @@ namespace QuantConnect.Tests.Messaging
 
                     Assert.IsTrue(message.FrameCount == 2);
 
-                    switch (resource)
-                    {
-                        case Resources.Debug:
-                            Assert.IsTrue(packet == JsonConvert.SerializeObject(debug));
-                            break;
-                        case Resources.HandledError:
-                            Assert.IsTrue(packet == JsonConvert.SerializeObject(handled));
-                            break;
-                        case Resources.BacktestResult:
-                            Assert.IsTrue(packet == JsonConvert.SerializeObject(backtest));
-                            break;
-                        case Resources.RuntimeError:
-                            Assert.IsTrue(packet == JsonConvert.SerializeObject(error));
-                            break;
-                        case Resources.Log:
-                            Assert.IsTrue(packet == JsonConvert.SerializeObject(log));
-                            break;
-                    }
+                    if (typeof(DebugPacket).Name == resource)
+                        Assert.IsTrue(packet == JsonConvert.SerializeObject(debug));
+
+                    if (typeof(HandledErrorPacket).Name == resource)
+                        Assert.IsTrue(packet == JsonConvert.SerializeObject(handled));
+
+                    if (typeof(BacktestResultPacket).Name == resource)
+                        Assert.IsTrue(packet == JsonConvert.SerializeObject(backtest));
+
+                    if (typeof(RuntimeErrorPacket).Name == resource)
+                        Assert.IsTrue(packet == JsonConvert.SerializeObject(error));
+
+                    if (typeof(LogPacket).Name == resource)
+                        Assert.IsTrue(packet == JsonConvert.SerializeObject(log));
 
                     count++;
                 }
@@ -124,7 +120,7 @@ namespace QuantConnect.Tests.Messaging
                 var packet   = message[1].ConvertToString();
 
                 Assert.IsTrue(message.FrameCount == 2);
-                Assert.IsTrue(resource == Resources.BacktestJob);
+                Assert.IsTrue(resource == typeof(BacktestNodePacket).Name);
                 Assert.IsTrue(packet == JsonConvert.SerializeObject(backtest));
             }
         }
@@ -142,7 +138,7 @@ namespace QuantConnect.Tests.Messaging
                 var packet = message[1].ConvertToString();
 
                 Assert.IsTrue(message.FrameCount == 2);
-                Assert.IsTrue(resource == Resources.LiveJob);
+                Assert.IsTrue(resource == typeof(LiveNodePacket).Name);
                 Assert.IsTrue(packet == JsonConvert.SerializeObject(new LiveNodePacket()));
             }
         }

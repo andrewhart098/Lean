@@ -31,43 +31,60 @@ namespace QuantConnect.Views
                     var resource = message[0].ConvertToString();
                     var packet   = message[1].ConvertToString();
 
-                    switch (resource)
+
+                    if (typeof(LiveNodePacket).Name == resource)
                     {
-                        case Resources.LiveJob:
-                            var liveJobModel = Bind<LiveNodePacket>(packet);
-                            if (!liveJobModel.Errors)
-                                handler.Initialize(liveJobModel.Packet);
-                            break;
-                        case Resources.BacktestJob:
-                            var backtestJobModel = Bind<BacktestNodePacket>(packet);
-                            if (!backtestJobModel.Errors)
-                                handler.Initialize(backtestJobModel.Packet);
-                            break;
-                        case Resources.Debug:
-                            var debugEventModel = Bind<DebugPacket>(packet);
-                            if (!debugEventModel.Errors)
-                                handler.DisplayDebugPacket(debugEventModel.Packet);
-                            break;
-                        case Resources.HandledError:
-                            var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
-                            if (!handleErrorEventModel.Errors)
-                                handler.DisplayHandledErrorPacket(handleErrorEventModel.Packet);
-                            break;
-                        case Resources.BacktestResult:
-                            var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
-                            if (!backtestResultEventModel.Errors)
-                                handler.DisplayBacktestResultsPacket(backtestResultEventModel.Packet);
-                            break;
-                        case Resources.RuntimeError:
-                            var runtimeErrorEventModel = Bind<RuntimeErrorPacket>(packet);
-                            if (!runtimeErrorEventModel.Errors)
-                                handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel.Packet);
-                            break;
-                        case Resources.Log:
-                            var logEventModel = Bind<LogPacket>(packet);
-                            if (!logEventModel.Errors)
-                                handler.DisplayLogPacket(logEventModel.Packet);
-                            break;
+                        var liveJobModel = Bind<LiveNodePacket>(packet);
+                        if (!liveJobModel.Errors)
+                            handler.Initialize(liveJobModel.Packet);
+                        continue;
+                    }
+                    if (typeof(BacktestNodePacket).Name == resource)
+                    {
+                        var backtestJobModel = Bind<BacktestNodePacket>(packet);
+                        if (!backtestJobModel.Errors)
+                            handler.Initialize(backtestJobModel.Packet);
+                        continue;
+                    }
+                    if (typeof(DebugPacket).Name == resource)
+                    {
+                        var debugEventModel = Bind<DebugPacket>(packet);
+                        if (!debugEventModel.Errors)
+                            handler.DisplayDebugPacket(debugEventModel.Packet);
+                        continue;
+                    }
+
+                    if (typeof(HandledErrorPacket).Name == resource)
+                    {
+                        var handleErrorEventModel = Bind<HandledErrorPacket>(packet);
+                        if (!handleErrorEventModel.Errors)
+                            handler.DisplayHandledErrorPacket(handleErrorEventModel.Packet);
+                        continue;
+                    }
+
+                    if (typeof(BacktestResultPacket).Name == resource)
+                    {
+                        var backtestResultEventModel = Bind<BacktestResultPacket>(packet);
+                        if (!backtestResultEventModel.Errors)
+                            handler.DisplayBacktestResultsPacket(backtestResultEventModel.Packet);
+                        continue;
+                    }
+
+
+                    if (typeof(RuntimeErrorPacket).Name == resource)
+                    {
+                        var runtimeErrorEventModel = Bind<RuntimeErrorPacket>(packet);
+                        if (!runtimeErrorEventModel.Errors)
+                            handler.DisplayRuntimeErrorPacket(runtimeErrorEventModel.Packet);
+                        continue;
+                    }
+
+
+                    if (typeof(LogPacket).Name == resource)
+                    {
+                        var logEventModel = Bind<LogPacket>(packet);
+                        if (!logEventModel.Errors)
+                            handler.DisplayLogPacket(logEventModel.Packet);
                     }
                 }
             }

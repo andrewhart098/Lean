@@ -54,7 +54,7 @@ namespace QuantConnect.Views.UserInterfaceTests
             {
                 var message = new NetMQMessage();
 
-                message.Append(Resources.BacktestResult);
+                message.Append(typeof(BacktestResultPacket).Name);
 
                 server.SendMultipartMessage(message);
             }
@@ -85,7 +85,7 @@ namespace QuantConnect.Views.UserInterfaceTests
             {
                 var message = new NetMQMessage();
 
-                message.Append(Resources.Log);
+                message.Append(typeof(LiveNodePacket).Name);
                 message.Append(JsonConvert.SerializeObject(new LogPacket()));
 
                 server.SendMultipartMessage(message);
@@ -117,7 +117,7 @@ namespace QuantConnect.Views.UserInterfaceTests
             {
                 var message = new NetMQMessage();
 
-                message.Append(Resources.Log);
+                message.Append(typeof(LogPacket).Name);
                 message.Append(JsonConvert.SerializeObject(new LogPacket()));
                 message.Append("hello!");
 
