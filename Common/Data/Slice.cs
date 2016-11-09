@@ -310,6 +310,11 @@ namespace QuantConnect.Data
                         symbolData.TradeBar = (TradeBar)datum;
                         break;
 
+                    case MarketDataType.QuoteBar:
+                        symbolData.Type = SubscriptionType.QuoteBar;
+                        symbolData.QuoteBar = (QuoteBar)datum;
+                        break;
+
                     case MarketDataType.Tick:
                         symbolData.Type = SubscriptionType.Tick;
                         symbolData.Ticks.Add((Tick)datum);
@@ -393,7 +398,7 @@ namespace QuantConnect.Data
             return _data.Value.Select(kvp => new KeyValuePair<Symbol, BaseData>(kvp.Key, kvp.Value.GetData()));
         }
 
-        private enum SubscriptionType { TradeBar, Tick, Custom };
+        private enum SubscriptionType { TradeBar, Tick, Custom, QuoteBar };
         private class SymbolData
         {
             public SubscriptionType Type;
@@ -402,6 +407,7 @@ namespace QuantConnect.Data
             // data
             public BaseData Custom;
             public TradeBar TradeBar;
+            public QuoteBar QuoteBar;
             public readonly List<Tick> Ticks;
             public readonly List<BaseData> AuxilliaryData;
 
@@ -418,6 +424,8 @@ namespace QuantConnect.Data
                 {
                     case SubscriptionType.TradeBar:
                         return TradeBar;
+                    case SubscriptionType.QuoteBar:
+                        return QuoteBar;
                     case SubscriptionType.Tick:
                         return Ticks;
                     case SubscriptionType.Custom:
