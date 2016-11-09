@@ -558,7 +558,21 @@ namespace QuantConnect.Lean.Engine
                 //After we've fired all other events in this second, fire the pricing events:
                 try
                 {
-                    if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
+                    if (hasOnDataTradeBars)
+                    {
+                        if (timeSlice.Slice.Bars.Count > 0)
+                            methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
+
+                        // Incase QuoteBar data is present, but OnData(TradeBar) is called in algorithm
+                        if (timeSlice.Slice.QuoteBars.Count > 0)
+                        {
+                            foreach (var bar in timeSlice.Slice.QuoteBars.Collapse())
+                            {
+                                timeSlice.Slice.Bars.Add(bar.Key, bar.Value);
+                            }
+                            methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
+                        }
+                    }
                     if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
                     if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
                     if (hasOnDataTicks && timeSlice.Slice.Ticks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, timeSlice.Slice.Ticks);
