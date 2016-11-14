@@ -73,6 +73,7 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                     consolidator.Update(tick);
                 }
 
+                consolidator.Scan(DateTime.MaxValue);
                 dataWriter.Write(_quoteBars.OrderBy(x => x.Time));
             }
         }
