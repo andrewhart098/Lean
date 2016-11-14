@@ -32,7 +32,7 @@ namespace QuantConnect.Data.Market
         /// Average bid size
         /// </summary>
         public long LastBidSize { get; set; }
-        
+
         /// <summary>
         /// Average ask size
         /// </summary>
@@ -209,14 +209,14 @@ namespace QuantConnect.Data.Market
             if (Ask == null && askPrice != 0) Ask = new Bar();
             if (Ask != null) Ask.Update(askPrice);
 
-            if (bidSize > 0) 
+            if (bidSize > 0)
             {
-                LastBidSize = (long) bidSize;
+                LastBidSize = (long)bidSize;
             }
-            
+
             if (askSize > 0)
             {
-                LastAskSize = (long) askSize;
+                LastAskSize = (long)askSize;
             }
 
             // be prepared for updates without trades
@@ -226,14 +226,13 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// QuoteBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
+        /// Parses equity quote bar data into the specified quotebar type
         /// </summary>
         /// <param name="config">Symbols, Resolution, DataType, </param>
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
-        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
-        /// <returns>Enumerable iterator for returning each line of the required data.</returns>
-        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        /// <returns><see cref="QuoteBar"/> base on the csv data</returns>
+        public static QuoteBar ParseEquity(SubscriptionDataConfig config, string line, DateTime date)
         {
             var quoteBar = new QuoteBar
             {
@@ -258,10 +257,10 @@ namespace QuantConnect.Data.Market
             {
                 quoteBar.Bid = new Bar
                 {
-                    Open = config.GetNormalizedPrice(csv[1].ToDecimal()*_scaleFactor),
-                    High = config.GetNormalizedPrice(csv[2].ToDecimal()*_scaleFactor),
-                    Low = config.GetNormalizedPrice(csv[3].ToDecimal()*_scaleFactor),
-                    Close = config.GetNormalizedPrice(csv[4].ToDecimal()*_scaleFactor)
+                    Open = config.GetNormalizedPrice(csv[1].ToDecimal() * _scaleFactor),
+                    High = config.GetNormalizedPrice(csv[2].ToDecimal() * _scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[3].ToDecimal() * _scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[4].ToDecimal() * _scaleFactor)
                 };
                 quoteBar.LastBidSize = csv[5].ToInt64();
             }
@@ -275,10 +274,10 @@ namespace QuantConnect.Data.Market
             {
                 quoteBar.Ask = new Bar
                 {
-                    Open = config.GetNormalizedPrice(csv[6].ToDecimal()*_scaleFactor),
-                    High = config.GetNormalizedPrice(csv[7].ToDecimal()*_scaleFactor),
-                    Low = config.GetNormalizedPrice(csv[8].ToDecimal()*_scaleFactor),
-                    Close = config.GetNormalizedPrice(csv[9].ToDecimal()*_scaleFactor)
+                    Open = config.GetNormalizedPrice(csv[6].ToDecimal() * _scaleFactor),
+                    High = config.GetNormalizedPrice(csv[7].ToDecimal() * _scaleFactor),
+                    Low = config.GetNormalizedPrice(csv[8].ToDecimal() * _scaleFactor),
+                    Close = config.GetNormalizedPrice(csv[9].ToDecimal() * _scaleFactor)
                 };
                 quoteBar.LastAskSize = csv[10].ToInt64();
             }
@@ -291,6 +290,101 @@ namespace QuantConnect.Data.Market
 
             return quoteBar;
         }
+
+
+        /// <summary>
+        /// Parses forex quote bar data into the specified quotebar type
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> base on the csv data</returns>
+        public static BaseData ParseForex(SubscriptionDataConfig config, string line, DateTime date)
+        {
+            var quoteBar = new QuoteBar
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            };
+
+            var csv = line.ToCsv(10);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                quoteBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                // Using custom "ToDecimal" conversion for speed on high resolution data.
+                quoteBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            // only create the bid if it exists in the file
+            if (csv[1].Length != 0 || csv[2].Length != 0 || csv[3].Length != 0 || csv[4].Length != 0)
+            {
+                quoteBar.Bid = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[1].ToDecimal()),
+                    High = config.GetNormalizedPrice(csv[2].ToDecimal()),
+                    Low = config.GetNormalizedPrice(csv[3].ToDecimal()),
+                    Close = config.GetNormalizedPrice(csv[4].ToDecimal())
+                };
+                quoteBar.LastBidSize = csv[5].ToInt64();
+            }
+            else
+            {
+                quoteBar.Bid = null;
+            }
+
+            // only create the ask if it exists in the file
+            if (csv[6].Length != 0 || csv[7].Length != 0 || csv[8].Length != 0 || csv[9].Length != 0)
+            {
+                quoteBar.Ask = new Bar
+                {
+                    Open = config.GetNormalizedPrice(csv[6].ToDecimal()),
+                    High = config.GetNormalizedPrice(csv[7].ToDecimal()),
+                    Low = config.GetNormalizedPrice(csv[8].ToDecimal()),
+                    Close = config.GetNormalizedPrice(csv[9].ToDecimal())
+                };
+                quoteBar.LastAskSize = csv[10].ToInt64();
+            }
+            else
+            {
+                quoteBar.Ask = null;
+            }
+
+            quoteBar.Value = quoteBar.Close;
+
+            return quoteBar;
+        }
+
+        /// <summary>
+        /// QuoteBar Reader: Fetch the data from the QC storage and feed it line by line into the engine.
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <param name="isLiveMode">true if we're in live mode, false for backtesting mode</param>
+        /// <returns>Enumerable iterator for returning each line of the required data.</returns>
+        public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
+        {
+            switch (config.SecurityType)
+            {
+                case SecurityType.Equity:
+                case SecurityType.Option:
+                    return ParseEquity(config, line, date);
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return ParseForex(config, line, date);
+                default:
+                    throw new ArgumentException("QuoteBar.Reader(): Cannot parse the security type.");
+            }
+
+            return null;
+        }
+
+
 
         /// <summary>
         /// Get Source for Custom Data File

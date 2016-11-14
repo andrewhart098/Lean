@@ -18,7 +18,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using NodaTime;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities.Forex;
 using QuantConnect.Util;
 
 namespace QuantConnect.ToolBox.QuoteBarConverter
@@ -56,7 +59,7 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
 
             // Convert daily data
             var dailyQuoteBars = from quoteBarGroup in quoteBarsByDate
-                                 select AggregateQuoteBars(quoteBarGroup.ToList(), Resolution.Daily);
+                                    select AggregateQuoteBars(quoteBarGroup.ToList(), Resolution.Daily);
             // Write daily data
             var dailyDataWriter = new LeanDataWriter(Resolution.Daily, _symbol, _dataFolderPath);
             dailyDataWriter.Write(dailyQuoteBars);
@@ -112,6 +115,15 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
         /// <returns><see cref="List{QuoteBar}"/></returns>
         private List<QuoteBar> ReadAllMinuteQuoteBars()
         {
+            var config = new SubscriptionDataConfig(typeof(Forex),
+                                                    _symbol,
+                                                    Resolution.Tick,
+                                                    DateTimeZone.Utc,
+                                                    DateTimeZone.Utc,
+                                                    false,
+                                                    false,
+                                                    false);
+
             // Get minute resolution files
             var relativeZipFileDirectory = LeanData.GenerateRelativeZipFileDirectory(_symbol, Resolution.Minute);
             var directory = System.IO.Path.Combine(_dataFolderPath, relativeZipFileDirectory);
@@ -131,66 +143,13 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                             string line;
                             while ((line = s.ReadLine()) != null)
                             {
-                                quoteBars.Add(ReadStringAsQuoteBar(line, date));
+                                quoteBars.Add((QuoteBar) QuoteBar.ParseForex(config, line, date));
                             }
                         }
                     }
                 }
             }
             return quoteBars;
-        }
-
-        /// <summary>
-        /// Read a line as a <see cref="QuoteBar"/> WITH NO SCALING FACTOR
-        /// </summary>
-        /// <param name="line">CSV line to be read</param>
-        /// <param name="dateTime"><see cref="DateTime"/> the data represents</param>
-        /// <returns><see cref="QuoteBar"/></returns>
-        public QuoteBar ReadStringAsQuoteBar(string line, DateTime dateTime)
-        {
-            var quoteBar = new QuoteBar();
-            var csv = line.ToCsv(10);
-
-            var ms = csv[0];
-            quoteBar.Time = dateTime.AddMilliseconds(System.Convert.ToDouble(ms));
-
-            // only create the bid if it exists in the file
-            if (csv[1].Length != 0 || csv[2].Length != 0 || csv[3].Length != 0 || csv[4].Length != 0)
-            {
-                quoteBar.Bid = new Bar
-                {
-                    Open = csv[1].ToDecimal(),
-                    High = csv[2].ToDecimal(),
-                    Low = csv[3].ToDecimal(),
-                    Close = csv[4].ToDecimal()
-                };
-                quoteBar.LastBidSize = csv[5].ToInt64();
-            }
-            else
-            {
-                quoteBar.Bid = null;
-            }
-
-            // only create the ask if it exists in the file
-            if (csv[6].Length != 0 || csv[7].Length != 0 || csv[8].Length != 0 || csv[9].Length != 0)
-            {
-                quoteBar.Ask = new Bar
-                {
-                    Open = csv[6].ToDecimal(),
-                    High = csv[7].ToDecimal(),
-                    Low = csv[8].ToDecimal(),
-                    Close = csv[9].ToDecimal()
-                };
-                quoteBar.LastAskSize = csv[10].ToInt64();
-            }
-            else
-            {
-                quoteBar.Ask = null;
-            }
-
-            quoteBar.Value = quoteBar.Close;
-
-            return quoteBar;
         }
     }
 }
