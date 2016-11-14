@@ -33,7 +33,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>QuantConnect.ToolBox.OandaDownloader.Program</StartupObject>
+    <StartupObject>QuantConnect.ToolBox.QuoteBarConverter.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.AWT.WinForms">
@@ -125,7 +125,6 @@
       <HintPath>..\packages\NodaTime.1.3.1\lib\net35-Client\NodaTime.dll</HintPath>
       <Private>True</Private>
     </Reference>
-
     <Reference Include="QuantConnect.Fxcm">
       <HintPath>..\Brokerages\Fxcm\QuantConnect.Fxcm.dll</HintPath>
     </Reference>
@@ -200,6 +199,9 @@
     <Compile Include="QuandlBitfinexDownloader\QuandlBitfinexDownloader.cs" />
     <Compile Include="QuantQuoteConverter\Program.cs" />
     <Compile Include="IDataDownloader.cs" />
+    <Compile Include="QuoteBarConverter\Program.cs" />
+    <Compile Include="QuoteBarConverter\QuoteBarHourDailyConverter.cs" />
+    <Compile Include="QuoteBarConverter\QuoteBarMinuteSecondConverter.cs" />
     <Compile Include="RawFileProcessor.cs" />
     <Compile Include="YahooDownloader\Program.cs" />
     <Compile Include="YahooDownloader\YahooDataDownloader.cs" />

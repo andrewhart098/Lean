@@ -66,13 +66,33 @@ namespace QuantConnect.Util
 
                         case Resolution.Second:
                         case Resolution.Minute:
-                            var bar = (TradeBar) data;
-                            return ToCsv(milliseconds, bar.Open, bar.High, bar.Low, bar.Close);
+                            var bar = (QuoteBar) data;
+                            return ToCsv(milliseconds, 
+                                         bar.Bid.Open, 
+                                         bar.Bid.High, 
+                                         bar.Bid.Low, 
+                                         bar.Bid.Close,
+                                         bar.LastBidSize == 0 ? "" : bar.LastBidSize.ToString(),
+                                         bar.Ask.Open,
+                                         bar.Ask.High,
+                                         bar.Ask.Low,
+                                         bar.Ask.Close,
+                                         bar.LastAskSize == 0 ? "" : bar.LastAskSize.ToString());
 
                         case Resolution.Hour:
                         case Resolution.Daily:
-                            var bigBar = (TradeBar) data;
-                            return ToCsv(longTime, bigBar.Open, bigBar.High, bigBar.Low, bigBar.Close);
+                            var bigBar = (QuoteBar) data;
+                            return ToCsv(bigBar.Time.ToString(DateFormat.TwelveCharacter),
+                                         bigBar.Bid.Open,
+                                         bigBar.Bid.High,
+                                         bigBar.Bid.Low,
+                                         bigBar.Bid.Close,
+                                         bigBar.LastBidSize == 0 ? "" : bigBar.LastBidSize.ToString(),
+                                         bigBar.Ask.Open,
+                                         bigBar.Ask.High,
+                                         bigBar.Ask.Low,
+                                         bigBar.Ask.Close,
+                                         bigBar.LastAskSize == 0 ? "" : bigBar.LastAskSize.ToString());
                     }
                     break;
 
