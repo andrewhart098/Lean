@@ -226,6 +226,24 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Parses the quotebar bar data line assuming QC data formats
+        /// </summary>
+        public static QuoteBar Parse(SubscriptionDataConfig config, string line, DateTime baseDate)
+        {
+            switch (config.SecurityType)
+            {
+                case SecurityType.Equity:
+                    return ParseEquity(config, line, baseDate);
+
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return ParseForex(config, line, baseDate);
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Parses equity quote bar data into the specified quotebar type
         /// </summary>
         /// <param name="config">Symbols, Resolution, DataType, </param>
@@ -299,7 +317,7 @@ namespace QuantConnect.Data.Market
         /// <param name="line">Line from the data file requested</param>
         /// <param name="date">Date of this reader request</param>
         /// <returns><see cref="QuoteBar"/> base on the csv data</returns>
-        public static BaseData ParseForex(SubscriptionDataConfig config, string line, DateTime date)
+        public static QuoteBar ParseForex(SubscriptionDataConfig config, string line, DateTime date)
         {
             var quoteBar = new QuoteBar
             {

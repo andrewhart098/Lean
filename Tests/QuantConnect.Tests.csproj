@@ -359,6 +359,7 @@
   <ItemGroup>
     <Folder Include="Adapters\" />
     <Folder Include="Tasks\" />
+    <Folder Include="Toolbox\" />
     <Folder Include="UserInterface\" />
   </ItemGroup>
   <ItemGroup>

@@ -32,7 +32,8 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
     public class QuoteBarMinuteSecondConverter
     {
         private readonly Symbol _symbol;
-        private readonly List<QuoteBar> _quoteBars;
+        private readonly List<QuoteBar> _minuteQuoteBars;
+        private readonly List<QuoteBar> _secondQuoteBars;
         private readonly string _destinationPath;
         private readonly string _sourcePath;
 
@@ -47,7 +48,8 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
             _symbol = symbol;
             _sourcePath = sourcePath;
             _destinationPath = destinationPath;
-            _quoteBars = new List<QuoteBar>();
+            _minuteQuoteBars = new List<QuoteBar>();
+            _secondQuoteBars = new List<QuoteBar>();
         }
 
         /// <summary>
@@ -56,26 +58,37 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
         public void Convert()
         {
             var ticks = ReadTickFile(_sourcePath);
-
-            foreach (var resolution in new List<Resolution>() { Resolution.Minute,  Resolution.Second })
+            
+            // Minute resolution
+            var minuteConsolidator = new TickQuoteBarConsolidator(Resolution.Minute.ToTimeSpan());
+            minuteConsolidator.DataConsolidated += (sender, args) =>
             {
-                var consolidator = new TickQuoteBarConsolidator(resolution.ToTimeSpan());
+                _minuteQuoteBars.Add(args);
+            };
 
-                consolidator.DataConsolidated += (sender, args) =>
-                {
-                    _quoteBars.Add(args);
-                };
-
-                var dataWriter = new LeanDataWriter(resolution, _symbol, _destinationPath);
-
-                foreach (var tick in ticks)
-                {
-                    consolidator.Update(tick);
-                }
-
-                consolidator.Scan(DateTime.MaxValue);
-                dataWriter.Write(_quoteBars.OrderBy(x => x.Time));
+            var minuteDataWriter = new LeanDataWriter(Resolution.Minute, _symbol, _destinationPath);
+            foreach (var tick in ticks)
+            {
+                minuteConsolidator.Update(tick);
             }
+            minuteConsolidator.Scan(DateTime.MaxValue);
+            minuteDataWriter.Write(_minuteQuoteBars.OrderBy(x => x.Time));
+
+
+            // Second resolution
+            var secondConsolidator = new TickQuoteBarConsolidator(Resolution.Second.ToTimeSpan());
+            secondConsolidator.DataConsolidated += (sender, args) =>
+            {
+                _secondQuoteBars.Add(args);
+            };
+
+            var secondDataWriter = new LeanDataWriter(Resolution.Second, _symbol, _destinationPath);
+            foreach (var tick in ticks)
+            {
+                secondConsolidator.Update(tick);
+            }
+            minuteConsolidator.Scan(DateTime.MaxValue);
+            secondDataWriter.Write(_secondQuoteBars.OrderBy(x => x.Time));
         }
 
         /// <summary>
