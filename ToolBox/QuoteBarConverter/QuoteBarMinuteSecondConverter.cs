@@ -29,7 +29,7 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
     /// <summary>
     /// Convert a <see cref="Tick"/> file into minute and second resolution <see cref="QuoteBar"/> files
     /// </summary>
-    public class QuoteBarMinuteSecondConverter
+    public class QuoteBarMinuteSecondConverter : IDisposable
     {
         private readonly Symbol _symbol;
         private readonly List<QuoteBar> _minuteQuoteBars;
@@ -57,23 +57,12 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
         /// </summary>
         public void Convert()
         {
-            var ticks = ReadTickFile(_sourcePath);
-            
             // Minute resolution
             var minuteConsolidator = new TickQuoteBarConsolidator(Resolution.Minute.ToTimeSpan());
             minuteConsolidator.DataConsolidated += (sender, args) =>
             {
                 _minuteQuoteBars.Add(args);
             };
-
-            var minuteDataWriter = new LeanDataWriter(Resolution.Minute, _symbol, _destinationPath);
-            foreach (var tick in ticks)
-            {
-                minuteConsolidator.Update(tick);
-            }
-            minuteConsolidator.Scan(DateTime.MaxValue);
-            minuteDataWriter.Write(_minuteQuoteBars.OrderBy(x => x.Time));
-
 
             // Second resolution
             var secondConsolidator = new TickQuoteBarConsolidator(Resolution.Second.ToTimeSpan());
@@ -82,13 +71,19 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                 _secondQuoteBars.Add(args);
             };
 
-            var secondDataWriter = new LeanDataWriter(Resolution.Second, _symbol, _destinationPath);
-            foreach (var tick in ticks)
+            foreach (var tick in ReadTickFile(_sourcePath))
             {
+                minuteConsolidator.Update(tick);
                 secondConsolidator.Update(tick);
             }
+
+            var minuteDataWriter = new LeanDataWriter(Resolution.Minute, _symbol, _destinationPath);
             minuteConsolidator.Scan(DateTime.MaxValue);
-            secondDataWriter.Write(_secondQuoteBars.OrderBy(x => x.Time));
+            minuteDataWriter.Write(_minuteQuoteBars);
+
+            var secondDataWriter = new LeanDataWriter(Resolution.Second, _symbol, _destinationPath);
+            secondConsolidator.Scan(DateTime.MaxValue);
+            secondDataWriter.Write(_secondQuoteBars);
         }
 
         /// <summary>
@@ -125,5 +120,9 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                 }
             }
         } // End ReadTickFile
+        public void Dispose()
+        {
+            
+        }
     } // End class QuoteBarMinuteSecondConverter
 }

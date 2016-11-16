@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using QuantConnect.Configuration;
@@ -28,11 +30,11 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
         /// </summary>
         public static void Main(string[] args)
         {
-            var dataDirectory = Config.Get("data-directory", "../../../Data/");
+            var dataDirectory = Config.Get("data-directory", "C:/Data");
             string sourceDirectory;
             
             if (args.Length == 0)
-                sourceDirectory = Config.Get("data-source-directory", "../../../Data/DataConversionTests/");
+                sourceDirectory = Config.Get("data-source-directory", "C:/ConvertedData");
             else
                 sourceDirectory = Config.Get("data-source-directory", args[0]);
 
@@ -48,11 +50,17 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
             var oandaTickZipFiles = Directory.GetFiles(oandaSourceDirectory, "*.*", SearchOption.AllDirectories);
             var oandaTopLevelTickDirectories = Directory.GetDirectories(oandaSourceDirectory, "*.*", SearchOption.TopDirectoryOnly);
 
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = 5
+            };
 
             Log.Trace("QuoteBarConverter.Main(): Beginning to convert FXCM tick data into minute and second quotebars.");
-            Parallel.ForEach(fxcmTickZipFiles, file =>
+            Parallel.ForEach(fxcmTickZipFiles, options, file =>
             {
-                var symbol = GetSymbolFromFileName(file, "fxcm");
+                var fileNameData = file.Split('\\');
+                var permtick = fileNameData[fileNameData.Length - 2];
+                var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "fxcm"), permtick);
                 var quoteBarConverter = new QuoteBarMinuteSecondConverter(file, fxcmDestinationDirectory, symbol);
                 quoteBarConverter.Convert();
             });
@@ -60,9 +68,11 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
 
 
             Log.Trace("QuoteBarConverter.Main(): Beginning to create FXCM hour and daily resolution quotebars.");
-            Parallel.ForEach(topLevelFXCMTickDirectories, directory =>
+            Parallel.ForEach(topLevelFXCMTickDirectories, options, directory =>
             {
-                var symbol = GetSymbolFromDirectoryName(directory, "fxcm");
+                var fileNameData = directory.Split('\\');
+                var permtick = fileNameData[fileNameData.Length - 1];
+                var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "fxcm"), permtick);
                 var quoteBarConverter = new QuoteBarHourDailyConverter(fxcmDestinationDirectory, symbol);
                 quoteBarConverter.Convert();
             });
@@ -70,9 +80,11 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
 
 
             Log.Trace("QuoteBarConverter.Main(): Beginning to convert OANDA tick data into minute and second quotebars.");
-            Parallel.ForEach(oandaTickZipFiles, file =>
+            Parallel.ForEach(oandaTickZipFiles, options, file =>
             {
-                var symbol = GetSymbolFromFileName(file, "oanda");
+                var fileNameData = file.Split('\\');
+                var permtick = fileNameData[fileNameData.Length - 2];
+                var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "oanda"), permtick);
                 var quoteBarConverter = new QuoteBarMinuteSecondConverter(file, oandaDestinationDirectory, symbol);
                 quoteBarConverter.Convert();
             });
@@ -80,9 +92,11 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
 
 
             Log.Trace("QuoteBarConverter.Main(): Beginning to create OANDA hour and daily resolution quotebars.");
-            Parallel.ForEach(oandaTopLevelTickDirectories, directory =>
+            Parallel.ForEach(oandaTopLevelTickDirectories, options, directory =>
             {
-                var symbol = GetSymbolFromDirectoryName(directory, "oanda");
+                var fileNameData = directory.Split('\\');
+                var permtick = fileNameData[fileNameData.Length - 1];
+                var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "oanda"), permtick);
                 var quoteBarConverter = new QuoteBarHourDailyConverter(oandaDestinationDirectory, symbol);
                 quoteBarConverter.Convert();
             });
@@ -90,22 +104,8 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
 
 
             Log.Trace("QuoteBarConverter.Main(): Done converting tick data. Exiting.");
-        }
 
-        public static Symbol GetSymbolFromDirectoryName(string directory, string market)
-        {
-            var fileNameData = directory.Split('\\');
-            var permtick = fileNameData[fileNameData.Length - 1];
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, market), permtick);
-            return symbol;
-        }
-
-        public static Symbol GetSymbolFromFileName(string file, string market)
-        {
-            var fileNameData = file.Split('\\');
-            var permtick = fileNameData[fileNameData.Length - 2];
-            var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, market), permtick);
-            return symbol;
+            Console.ReadLine();
         }
     }
 }
