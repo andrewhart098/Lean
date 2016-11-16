@@ -45,11 +45,11 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get the count of assets:
         /// </summary>
-        public int Count 
+        public int Count
         {
-            get 
-            { 
-                return Subscriptions.Count; 
+            get
+            {
+                return Subscriptions.Count;
             }
         }
 
@@ -69,10 +69,17 @@ namespace QuantConnect.Data
         {
             //Set the type: market data only comes in two forms -- ticks(trade by trade) or tradebar(time summaries)
             var dataType = typeof(TradeBar);
-            if (resolution == Resolution.Tick) 
+            if (resolution == Resolution.Tick)
             {
                 dataType = typeof(Tick);
             }
+
+            if (symbol.ID.SecurityType == SecurityType.Cfd ||
+                symbol.ID.SecurityType == SecurityType.Forex)
+            {
+                dataType = typeof(QuoteBar);
+            }
+
             return Add(dataType, symbol, resolution, timeZone, exchangeTimeZone, isCustomData, fillDataForward, extendedMarketHours, false);
         }
 
@@ -101,7 +108,7 @@ namespace QuantConnect.Data
             {
                 throw new ArgumentNullException("exchangeTimeZone", "ExchangeTimeZone is a required parameter for new subscriptions.  Set to the time zone the security exchange resides in.");
             }
-            
+
             //Create:
             var newConfig = new SubscriptionDataConfig(dataType, symbol, resolution, dataTimeZone, exchangeTimeZone, fillDataForward, extendedMarketHours, isInternalFeed, isCustomData, isFilteredSubscription: isFilteredSubscription);
 
@@ -130,7 +137,7 @@ namespace QuantConnect.Data
                     if (!consolidator.InputType.IsAssignableFrom(Subscriptions[i].Type))
                     {
                         throw new ArgumentException(string.Format("Type mismatch found between consolidator and symbol. " +
-                            "Symbol: {0} expects type {1} but tried to register consolidator with input type {2}", 
+                            "Symbol: {0} expects type {1} but tried to register consolidator with input type {2}",
                             symbol, Subscriptions[i].Type.Name, consolidator.InputType.Name)
                             );
                     }

@@ -23,7 +23,7 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
-namespace QuantConnect.Securities 
+namespace QuantConnect.Securities
 {
     /// <summary>
     /// Enumerable security management class for grouping security objects into an array and providing any common properties.
@@ -216,7 +216,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerable key value pair</returns>
-        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator() 
+        IEnumerator<KeyValuePair<Symbol, Security>> IEnumerable<KeyValuePair<Symbol, Security>>.GetEnumerator()
         {
             return _securityManager.GetEnumerator();
         }
@@ -226,7 +226,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
         /// <returns>Enumerator.</returns>
-        IEnumerator IEnumerable.GetEnumerator() 
+        IEnumerator IEnumerable.GetEnumerator()
         {
             return _securityManager.GetEnumerator();
         }
@@ -239,12 +239,12 @@ namespace QuantConnect.Securities
         /// <returns>Security</returns>
         public Security this[Symbol symbol]
         {
-            get 
+            get
             {
                 if (!_securityManager.ContainsKey(symbol))
                 {
                     throw new Exception(string.Format("This asset symbol ({0}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(\"{1}\")'", symbol, SymbolCache.GetTicker(symbol)));
-                } 
+                }
                 return _securityManager[symbol];
             }
             set
@@ -355,7 +355,7 @@ namespace QuantConnect.Securities
                     securityPortfolioManager.CashBook.Add(quoteCurrency, 0, 0);
                 }
             }
-            
+
             var quoteCash = securityPortfolioManager.CashBook[symbolProperties.QuoteCurrency];
 
             Security security;
@@ -447,10 +447,17 @@ namespace QuantConnect.Securities
             var symbolProperties = symbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol.Value, symbol.ID.SecurityType, defaultQuoteCurrency);
 
             var type = resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar);
-            if (symbol.ID.SecurityType == SecurityType.Option && resolution != Resolution.Tick)
+
+            if (resolution != Resolution.Tick)
             {
-                type = typeof(QuoteBar);
+                if (symbol.ID.SecurityType == SecurityType.Option ||
+                    symbol.ID.SecurityType == SecurityType.Forex ||
+                    symbol.ID.SecurityType == SecurityType.Cfd)
+                {
+                    type = typeof(QuoteBar);
+                }
             }
+
             return CreateSecurity(type, securityPortfolioManager, subscriptionManager, exchangeHours, marketHoursDbEntry.DataTimeZone, symbolProperties, securityInitializer, symbol, resolution,
                 fillDataForward, leverage, extendedMarketHours, isInternalFeed, isCustomData, isLiveMode, addToSymbolCache);
         }

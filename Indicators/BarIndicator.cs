@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  * 
@@ -14,31 +14,23 @@
 */
 
 using QuantConnect.Data.Market;
-using QuantConnect.Securities;
 
-namespace QuantConnect.Orders.Slippage
+namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// A slippage model that uses half of the bid/ask spread if available,
-    /// if not available, zero slippage is assumed.
+    /// The BarIndicator is an indicator that accepts IBaseDataBar data as its input.
+    /// 
+    /// This type is more of a shim/typedef to reduce the need to refer to things as IndicatorBase&lt;IBaseDataBar&gt;
     /// </summary>
-    public class SpreadSlippageModel : ISlippageModel
+    public abstract class BarIndicator : IndicatorBase<IBaseDataBar>
     {
         /// <summary>
-        /// Slippage Model. Return a decimal cash slippage approximation on the order.
+        /// Creates a new TradeBarIndicator with the specified name
         /// </summary>
-        public virtual decimal GetSlippageApproximation(Security asset, Order order)
+        /// <param name="name">The name of this indicator</param>
+        protected BarIndicator(string name)
+            : base(name)
         {
-            var lastData = asset.GetLastData();
-            var lastTick = lastData as Tick;
-
-            // if we have tick data use the spread
-            if (lastTick != null)
-            {
-                return (lastTick.AskPrice - lastTick.BidPrice) / 2;
-            }
-
-            return 0m;
         }
     }
 }

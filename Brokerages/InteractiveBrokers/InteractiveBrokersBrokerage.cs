@@ -158,7 +158,7 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
             _clientId = IncrementClientId();
             _agentDescription = agentDescription;
             _client = new IB.InteractiveBrokersClient();
-
+            
             // set up event handlers
             _client.UpdatePortfolio += HandlePortfolioUpdates;
             _client.OrderStatus += HandleOrderStatusUpdates;
@@ -426,8 +426,16 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
 
                         while (_client.ClientSocket.IsConnected())
                         {
-                            signal.waitForSignal();
-                            reader.processMsgs();
+                            try
+                            {
+                                signal.waitForSignal();
+                                reader.processMsgs();
+                            }
+                            catch (Exception error)
+                            {
+                                // error in message processing thread, log error and disconnect
+                                Log.Error("Error in message processing thread: " + error);
+                            }
                         }
 
                         Log.Trace("IB message processing thread ended.");
@@ -858,6 +866,10 @@ namespace QuantConnect.Brokerages.InteractiveBrokers
                 // we've reconnected
                 _disconnected1100Fired = false;
                 OnMessage(BrokerageMessageEvent.Reconnected(errorMsg));
+            }
+            else if (errorCode == 506)
+            {
+                Log.Trace("InteractiveBrokersBrokerage.HandleError(): Server Version: " + _client.ClientSocket.ServerVersion);
             }
 
             if (InvalidatingCodes.Contains(errorCode))

@@ -35,7 +35,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         private Symbol _symbol;
         private TickType _tickType;
         private Resolution _resolution;
-        private Queue<BaseData> _queue;
+        private Queue<IBaseData> _queue;
         private string _dataDirectory;
         private IDataConsolidator _consolidator;
         private DateTime _referenceDate;
@@ -87,7 +87,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
         /// <summary>
         /// Output base data queue for processing in memory
         /// </summary>
-        public Queue<BaseData> Queue
+        public Queue<IBaseData> Queue
         {
             get { return _queue; }
         }
@@ -124,7 +124,7 @@ namespace QuantConnect.ToolBox.AlgoSeekFuturesConverter
             _tickType = tickType;
             _referenceDate = date;
             _resolution = resolution;
-            _queue = new Queue<BaseData>();
+            _queue = new Queue<IBaseData>();
             _dataDirectory = dataDirectory;
             _consolidator = new TickConsolidator(resolution.ToTimeSpan());
 

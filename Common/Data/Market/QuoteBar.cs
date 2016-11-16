@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Market
     /// QuoteBar class for second and minute resolution data: 
     /// An OHLC implementation of the QuantConnect BaseData class with parameters for candles.
     /// </summary>
-    public class QuoteBar : BaseData, IBar
+    public class QuoteBar : BaseData, IBaseDataBar
     {
         // scale factor used in QC equity/forex data files
         private const decimal _scaleFactor = 1 / 10000m;
@@ -252,6 +252,81 @@ namespace QuantConnect.Data.Market
         /// <returns><see cref="QuoteBar"/> base on the csv data</returns>
         public static QuoteBar ParseEquity(SubscriptionDataConfig config, string line, DateTime date)
         {
+            var quoteBar = new QuoteBar();
+
+            var csvLength = line.Split(',').Length;
+
+            // "Scaffold" code - simple check to see how the data is formatted and decide how to parse appropriately
+            // TODO: Once all FX is reprocessed to QuoteBars, remove this check
+            if (csvLength > 5)
+                quoteBar = ParseForexFromQuoteBarData(config, date, line);
+            else
+                quoteBar = ParseForexFromTradeBarData(config, date, line);
+
+            return quoteBar;
+        }
+
+        /// <summary>
+        /// "Scaffold" code - If the data being read is formatted as a TradeBar, use this method to deserialize it
+        /// TODO: Once all Forex data refactored to use QuoteBar formatted data, remove this method
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask prices set to same values</returns>
+        private QuoteBar ParseForexFromTradeBarData(SubscriptionDataConfig config, DateTime date, string line)
+        {
+            var quoteBar = new QuoteBar
+            {
+                Period = config.Increment,
+                Symbol = config.Symbol
+            };
+
+            var csv = line.ToCsv(5);
+            if (config.Resolution == Resolution.Daily || config.Resolution == Resolution.Hour)
+            {
+                // hourly and daily have different time format, and can use slow, robust c# parser.
+                quoteBar.Time = DateTime.ParseExact(csv[0], DateFormat.TwelveCharacter, CultureInfo.InvariantCulture).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+            else
+            {
+                //Fast decimal conversion
+                quoteBar.Time = date.Date.AddMilliseconds(csv[0].ToInt32()).ConvertTo(config.DataTimeZone, config.ExchangeTimeZone);
+            }
+
+            var bid = new Bar
+            {
+                Open = csv[1].ToDecimal(),
+                High = csv[2].ToDecimal(),
+                Low = csv[3].ToDecimal(),
+                Close = csv[4].ToDecimal()
+            };
+
+            var ask = new Bar
+            {
+                Open = csv[1].ToDecimal(),
+                High = csv[2].ToDecimal(),
+                Low = csv[3].ToDecimal(),
+                Close = csv[4].ToDecimal()
+            };
+
+            quoteBar.Ask = ask;
+            quoteBar.Bid = bid;
+            quoteBar.Value = quoteBar.Close;
+
+            return quoteBar;
+        }
+
+        /// <summary>
+        /// "Scaffold" code - If the data being read is formatted as a QuoteBar, use this method to deserialize it
+        /// TODO: Once all Forex data refactored to use QuoteBar formatted data, use only this method
+        /// </summary>
+        /// <param name="config">Symbols, Resolution, DataType, </param>
+        /// <param name="line">Line from the data file requested</param>
+        /// <param name="date">Date of this reader request</param>
+        /// <returns><see cref="QuoteBar"/> with the bid/ask prices set appropriately</returns>
+        private QuoteBar ParseForexFromQuoteBarData(SubscriptionDataConfig config, DateTime date, string line)
+        {
             var quoteBar = new QuoteBar
             {
                 Period = config.Increment,
@@ -420,8 +495,7 @@ namespace QuantConnect.Data.Market
             }
 
             var source = LeanData.GenerateZipFilePath(Globals.DataFolder, config.Symbol, date, config.Resolution, config.TickType);
-            if (config.SecurityType == SecurityType.Option ||
-                config.SecurityType == SecurityType.Future)
+            if (config.SecurityType == SecurityType.Option)
             {
                 source += "#" + LeanData.GenerateZipEntryName(config.Symbol, date, config.Resolution, config.TickType);
             }

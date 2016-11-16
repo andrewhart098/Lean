@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine
         /// <param name="commands">The command queue for relaying extenal commands to the algorithm</param>
         /// <param name="token">Cancellation token</param>
         /// <remarks>Modify with caution</remarks>
-        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ICommandQueueHandler commands, CancellationToken token) 
+        public void Run(AlgorithmNodePacket job, IAlgorithm algorithm, IDataFeed feed, ITransactionHandler transactions, IResultHandler results, IRealTimeHandler realtime, ICommandQueueHandler commands, CancellationToken token)
         {
             //Initialize:
             _dataPointCount = 0;
@@ -169,10 +169,10 @@ namespace QuantConnect.Lean.Engine
                 .FirstOrDefault(x => x.DeclaringType == algorithm.GetType()) != null;
 
             //Go through the subscription types and create invokers to trigger the event handlers for each custom type:
-            foreach (var config in algorithm.SubscriptionManager.Subscriptions) 
+            foreach (var config in algorithm.SubscriptionManager.Subscriptions)
             {
                 //If type is a custom feed, check for a dedicated event handler
-                if (config.IsCustomData) 
+                if (config.IsCustomData)
                 {
                     //Get the matching method for this event handler - e.g. public void OnData(Quandl data) { .. }
                     var genericMethod = (algorithm.GetType()).GetMethod("OnData", new[] { config.Type });
@@ -559,10 +559,19 @@ namespace QuantConnect.Lean.Engine
                 //After we've fired all other events in this second, fire the pricing events:
                 try
                 {
-                    if (hasOnDataTradeBars && timeSlice.Slice.Bars.Count > 0) methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
-                    if (hasOnDataQuoteBars && timeSlice.Slice.QuoteBars.Count > 0) methodInvokers[typeof(QuoteBars)](algorithm, timeSlice.Slice.QuoteBars);
-                    if (hasOnDataOptionChains && timeSlice.Slice.OptionChains.Count > 0) methodInvokers[typeof(OptionChains)](algorithm, timeSlice.Slice.OptionChains);
-                    if (hasOnDataTicks && timeSlice.Slice.Ticks.Count > 0) methodInvokers[typeof(Ticks)](algorithm, timeSlice.Slice.Ticks);
+                    if (hasOnDataTradeBars)
+                    {
+                        if (timeSlice.Slice.QuoteBars.Count > 0)
+                        {
+                            foreach (var tradeBar in timeSlice.Slice.QuoteBars.Collapse())
+                            {
+                                timeSlice.Slice.Bars.Add(tradeBar);
+                            }
+                        }
+
+                        if (timeSlice.Slice.Bars.Count > 0)
+                            methodInvokers[typeof(TradeBars)](algorithm, timeSlice.Slice.Bars);
+                    }
                 }
                 catch (Exception err)
                 {
@@ -651,7 +660,7 @@ namespace QuantConnect.Lean.Engine
             results.SampleRange(algorithm.GetChartUpdates());
             results.SampleEquity(_previousTime, Math.Round(algorithm.Portfolio.TotalPortfolioValue, 4));
             SampleBenchmark(algorithm, results, _previousTime);
-            
+
             //Check for divide by zero
             if (portfolioValue == 0m)
             {
@@ -778,7 +787,7 @@ namespace QuantConnect.Lean.Engine
                         }
                         yield return timeSlice;
                         lastHistoryTimeUtc = timeSlice.Time;
-                    } 
+                    }
                 }
             }
 
@@ -822,7 +831,7 @@ namespace QuantConnect.Lean.Engine
                         {
                             continue;
                         }
-                        
+
                         // prevent us from doing these checks every loop
                         lastHistoryTimeUtc = null;
                     }
@@ -842,7 +851,7 @@ namespace QuantConnect.Lean.Engine
                         // catching up to real time data
                         nextStatusTime = DateTime.UtcNow.AddSeconds(1);
                         var percent = (int) (100*(timeSlice.Time.Ticks - start)/(double) (DateTime.UtcNow.Ticks - start));
-                        results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));   
+                        results.SendStatusUpdate(AlgorithmStatus.History, string.Format("Catching up to realtime {0}%...", percent));
                     }
                 }
                 yield return timeSlice;
