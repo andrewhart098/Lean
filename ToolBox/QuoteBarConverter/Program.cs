@@ -38,11 +38,13 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
             else
                 sourceDirectory = Config.Get("data-source-directory", args[0]);
 
+            var errorLogPath = @"C:/ConvertedData/error.log";
+
             // FXCM
-            var fxcmSourceDirectory      = Path.Combine(dataDirectory, @"forex\fxcm\tick");
-            var fxcmDestinationDirectory = sourceDirectory;
-            var fxcmTickZipFiles = Directory.GetFiles(fxcmSourceDirectory, "*.*", SearchOption.AllDirectories);
-            var topLevelFXCMTickDirectories = Directory.GetDirectories(fxcmSourceDirectory, "*.*", SearchOption.TopDirectoryOnly);
+            //var fxcmSourceDirectory      = Path.Combine(dataDirectory, @"forex\fxcm\tick");
+            //var fxcmDestinationDirectory = sourceDirectory;
+            //var fxcmTickZipFiles = Directory.GetFiles(fxcmSourceDirectory, "*.*", SearchOption.AllDirectories);
+            //var topLevelFXCMTickDirectories = Directory.GetDirectories(fxcmSourceDirectory, "*.*", SearchOption.TopDirectoryOnly);
 
             // OANDA
             var oandaSourceDirectory = Path.Combine(dataDirectory, @"forex\oanda\tick");
@@ -55,28 +57,28 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                 MaxDegreeOfParallelism = 5
             };
 
-            Log.Trace("QuoteBarConverter.Main(): Beginning to convert FXCM tick data into minute and second quotebars.");
-            Parallel.ForEach(fxcmTickZipFiles, options, file =>
-            {
-                var fileNameData = file.Split('\\');
-                var permtick = fileNameData[fileNameData.Length - 2];
-                var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "fxcm"), permtick);
-                var quoteBarConverter = new QuoteBarMinuteSecondConverter(file, fxcmDestinationDirectory, symbol);
-                quoteBarConverter.Convert();
-            });
-            Log.Trace("QuoteBarConverter.Main(): Done converting FXCM minute and second resolution data.");
+            //Log.Trace("QuoteBarConverter.Main(): Beginning to convert FXCM tick data into minute and second quotebars.");
+            //Parallel.ForEach(fxcmTickZipFiles, options, file =>
+            //{
+            //    var fileNameData = file.Split('\\');
+            //    var permtick = fileNameData[fileNameData.Length - 2];
+            //    var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "fxcm"), permtick);
+            //    var quoteBarConverter = new QuoteBarMinuteSecondConverter(file, fxcmDestinationDirectory, symbol);
+            //    quoteBarConverter.Convert();
+            //});
+            //Log.Trace("QuoteBarConverter.Main(): Done converting FXCM minute and second resolution data.");
 
 
-            Log.Trace("QuoteBarConverter.Main(): Beginning to create FXCM hour and daily resolution quotebars.");
-            Parallel.ForEach(topLevelFXCMTickDirectories, options, directory =>
-            {
-                var fileNameData = directory.Split('\\');
-                var permtick = fileNameData[fileNameData.Length - 1];
-                var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "fxcm"), permtick);
-                var quoteBarConverter = new QuoteBarHourDailyConverter(fxcmDestinationDirectory, symbol);
-                quoteBarConverter.Convert();
-            });
-            Log.Trace("QuoteBarConverter.Main(): Done converting FXCM minute data to hour and daily resolution data.");
+            //Log.Trace("QuoteBarConverter.Main(): Beginning to create FXCM hour and daily resolution quotebars.");
+            //Parallel.ForEach(topLevelFXCMTickDirectories, options, directory =>
+            //{
+            //    var fileNameData = directory.Split('\\');
+            //    var permtick = fileNameData[fileNameData.Length - 1];
+            //    var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "fxcm"), permtick);
+            //    var quoteBarConverter = new QuoteBarHourDailyConverter(fxcmDestinationDirectory, symbol);
+            //    quoteBarConverter.Convert();
+            //});
+            //Log.Trace("QuoteBarConverter.Main(): Done converting FXCM minute data to hour and daily resolution data.");
 
 
             Log.Trace("QuoteBarConverter.Main(): Beginning to convert OANDA tick data into minute and second quotebars.");
@@ -85,8 +87,24 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                 var fileNameData = file.Split('\\');
                 var permtick = fileNameData[fileNameData.Length - 2];
                 var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "oanda"), permtick);
-                var quoteBarConverter = new QuoteBarMinuteSecondConverter(file, oandaDestinationDirectory, symbol);
-                quoteBarConverter.Convert();
+
+                try
+                {
+                    var quoteBarConverter = new QuoteBarMinuteSecondConverter(file, oandaDestinationDirectory, symbol);
+                    quoteBarConverter.Convert();
+                }
+                catch (Exception e)
+                {
+                    File.AppendAllLines(errorLogPath, new string[]
+                    {
+                        "#############",
+                        DateTime.Now.ToString("u"),
+                        e.Message.ToString(),
+                        e.GetBaseException().ToString(),
+                        "min/sec resolution",
+                        symbol
+                    } );
+                }
             });
             Log.Trace("QuoteBarConverter.Main(): Done converting OANDA minute and second resolution data.");
 
@@ -97,8 +115,23 @@ namespace QuantConnect.ToolBox.QuoteBarConverter
                 var fileNameData = directory.Split('\\');
                 var permtick = fileNameData[fileNameData.Length - 1];
                 var symbol = new Symbol(SecurityIdentifier.GenerateForex(permtick, "oanda"), permtick);
-                var quoteBarConverter = new QuoteBarHourDailyConverter(oandaDestinationDirectory, symbol);
-                quoteBarConverter.Convert();
+                try
+                {
+                    var quoteBarConverter = new QuoteBarHourDailyConverter(oandaDestinationDirectory, symbol);
+                    quoteBarConverter.Convert();
+                }
+                catch (Exception e)
+                {
+                    File.AppendAllLines(errorLogPath, new string[]
+                    {
+                        "#############",
+                        DateTime.Now.ToString("u"),
+                        e.Message.ToString(),
+                        e.GetBaseException().ToString(),
+                        "daily/hour resolution",
+                        symbol
+                    });
+                }
             });
             Log.Trace("QuoteBarConverter.Main(): Done converting OANDA minute data to hour and daily resolution data.");
 
