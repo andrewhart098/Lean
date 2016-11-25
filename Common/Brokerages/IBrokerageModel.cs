@@ -121,6 +121,11 @@ namespace QuantConnect.Brokerages
         /// <returns>The settlement model for this brokerage</returns>
         ISettlementModel GetSettlementModel(Security security, AccountType accountType);
 
+        /// <summary>
+        /// Get the security types supported by the brokerage
+        /// </summary>
+        /// <returns>The <see cref="SecurityType"/> supported by this brokerage</returns>
+        IReadOnlyList<SecurityType> GetSupportedSecurityTypes();
     }
 
     /// <summary>

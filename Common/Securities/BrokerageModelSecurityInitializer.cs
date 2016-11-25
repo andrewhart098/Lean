@@ -47,10 +47,10 @@ namespace QuantConnect.Securities
         /// <param name="timeKeeper">Used to get the current <see cref="DateTime"/> in UTC</param>
         /// <param name="localTimeKeeper">Gets the local algorithm time</param>
         /// <param name="isLiveMode">Indicates whether the algorithm is Live</param>
-        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, 
-                                                 IHistoryProvider historyProvider, 
-                                                 TimeKeeper timeKeeper, 
-                                                 LocalTimeKeeper localTimeKeeper, 
+        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel,
+                                                 IHistoryProvider historyProvider,
+                                                 TimeKeeper timeKeeper,
+                                                 LocalTimeKeeper localTimeKeeper,
                                                  bool isLiveMode)
         {
             _brokerageModel = brokerageModel;
@@ -74,24 +74,18 @@ namespace QuantConnect.Securities
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
 
             // Seed the correct price from the history provider if needed
-            if (_isLiveMode && security.Price == 0)
+            if (_isLiveMode 
+                && security.Price == 0
+                && _brokerageModel.GetSupportedSecurityTypes().Contains(security.Symbol.ID.SecurityType))
             {
                 var request = CreateSingleBarCountHistoryRequests(security);
                 var history = _historyProvider.GetHistory(new List<HistoryRequest>() { request }, _localTimeKeeper.TimeZone);
 
-                try
-                {
-                    if (history.Any())
-                        security.SetMarketPrice(history.First().Values.First());
-                    else
-                        Log.Trace("BrokerageSecurityModel.Initialize(): Could not seed price for security {0} from history.",
-                                  security.Symbol.ID.Symbol);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("BrokerageSecurityModel.Initialize(): Cannot set initial price for security {0}. " +
-                              "Error: {1}", security.Symbol.ID.Symbol, ex.GetBaseException());
-                }
+                if (history.Any())
+                    security.SetMarketPrice(history.First().Values.First());
+                else
+                    Log.Trace("BrokerageSecurityModel.Initialize(): Could not seed price for security {0} from history.",
+                              security.Symbol.ID.Symbol);
             }
         }
 
@@ -109,9 +103,9 @@ namespace QuantConnect.Securities
                                                                1,
                                                                security.IsExtendedMarketHours);
             var start = localStartTime.ConvertTo(security.Exchange.TimeZone, _localTimeKeeper.TimeZone);
-            
-            return CreateHistoryRequest(security, 
-                                        start, 
+
+            return CreateHistoryRequest(security,
+                                        start,
                                         _localTimeKeeper.LocalTime.RoundDown(security.Resolution.ToTimeSpan()));
         }
 

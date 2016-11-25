@@ -107,6 +107,24 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Get the security types supported by the brokerage
+        /// </summary>
+        /// <returns>The <see cref="SecurityType"/> supported by this brokerage</returns>
+        public override IReadOnlyList<SecurityType> GetSupportedSecurityTypes()
+        {
+            // default to all securities
+            return new List<SecurityType>()
+            {
+                SecurityType.Forex,
+                SecurityType.Cfd,
+                SecurityType.Commodity,
+                SecurityType.Equity,
+                SecurityType.Future,
+                SecurityType.Option
+            };
+        }
+
+        /// <summary>
         /// Returns true if the specified order is within IB's order size limits
         /// </summary>
         private bool IsForexWithinOrderSizeLimits(string currencyPair, int quantity, out BrokerageMessageEvent message)

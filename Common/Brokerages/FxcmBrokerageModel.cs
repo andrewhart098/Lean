@@ -189,21 +189,40 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Get the security types supported by the brokerage
+        /// </summary>
+        /// <returns>The <see cref="SecurityType"/> supported by this brokerage</returns>
+        public override IReadOnlyList<SecurityType> GetSupportedSecurityTypes()
+        {
+            // default to all securities
+            return new List<SecurityType>()
+            {
+                SecurityType.Forex,
+                SecurityType.Cfd,
+            };
+        }
+
+        /// <summary>
         /// Validates limit/stopmarket order prices, pass security.Price for limit/stop if n/a
         /// </summary>
-        private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection, decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
+        private static bool IsValidOrderPrices(Security security, OrderType orderType, OrderDirection orderDirection,
+            decimal stopPrice, decimal limitPrice, ref BrokerageMessageEvent message)
         {
             // validate order price
-            var invalidPrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy && limitPrice > security.Price ||
-                orderType == OrderType.Limit && orderDirection == OrderDirection.Sell && limitPrice < security.Price ||
-                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy && stopPrice < security.Price ||
-                orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell && stopPrice > security.Price;
+            var invalidPrice = orderType == OrderType.Limit && orderDirection == OrderDirection.Buy &&
+                               limitPrice > security.Price ||
+                               orderType == OrderType.Limit && orderDirection == OrderDirection.Sell &&
+                               limitPrice < security.Price ||
+                               orderType == OrderType.StopMarket && orderDirection == OrderDirection.Buy &&
+                               stopPrice < security.Price ||
+                               orderType == OrderType.StopMarket && orderDirection == OrderDirection.Sell &&
+                               stopPrice > security.Price;
 
             if (invalidPrice)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     "Limit Buy orders and Stop Sell orders must be below market, Limit Sell orders and Stop Buy orders must be above market."
-                    );
+                );
 
                 return false;
             }

@@ -189,5 +189,21 @@ namespace QuantConnect.Brokerages
             return new SpreadSlippageModel();
         }
 
+        /// <summary>
+        /// Get the security types supported by the brokerage
+        /// </summary>
+        /// <returns>The <see cref="SecurityType"/> supported by this brokerage</returns>
+        public override IReadOnlyList<SecurityType> GetSupportedSecurityTypes()
+        {
+            // default to all securities
+            return new List<SecurityType>()
+            {
+                SecurityType.Forex,
+                SecurityType.Cfd,
+                SecurityType.Equity,
+                SecurityType.Future,
+                SecurityType.Option
+            };
+        }
     }
 }

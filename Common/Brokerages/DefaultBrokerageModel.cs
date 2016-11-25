@@ -246,5 +246,23 @@ namespace QuantConnect.Brokerages
             return new ImmediateSettlementModel();
         }
 
+        /// <summary>
+        /// Get the security types supported by the brokerage
+        /// </summary>
+        /// <returns>The <see cref="SecurityType"/> supported by this brokerage</returns>
+        public virtual IReadOnlyList<SecurityType> GetSupportedSecurityTypes()
+        {
+            // default to all securities
+            return new List<SecurityType>()
+            {
+                SecurityType.Base,
+                SecurityType.Forex,
+                SecurityType.Cfd,
+                SecurityType.Commodity,
+                SecurityType.Equity,
+                SecurityType.Future,
+                SecurityType.Option
+            };
+        }
     }
 }
