@@ -182,12 +182,12 @@ namespace QuantConnect.Lean.Engine.Setup
                 {
                     try
                     {
+                        //Algorithm is live, not backtesting:
+                        algorithm.SetLiveMode(true);
                         //Set the default brokerage model before initialize
                         algorithm.SetBrokerageModel(_factory.BrokerageModel);
                         //Set our parameters
                         algorithm.SetParameters(job.Parameters);
-                        //Algorithm is live, not backtesting:
-                        algorithm.SetLiveMode(true);
                         //Initialize the algorithm's starting date
                         algorithm.SetDateTime(DateTime.UtcNow);
                         //Set the source impl for the event scheduling

@@ -140,7 +140,11 @@ namespace QuantConnect.Algorithm
             // initialize the trade builder
             TradeBuilder = new TradeBuilder(FillGroupingMethod.FillToFill, FillMatchingMethod.FIFO);
 
-            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin));
+            SecurityInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(AccountType.Margin),
+                                                                        HistoryProvider,
+                                                                        _timeKeeper,
+                                                                        _localTimeKeeper,
+                                                                        LiveMode);
 
             CandlestickPatterns = new CandlestickPatterns(this);
         }
@@ -835,7 +839,11 @@ namespace QuantConnect.Algorithm
             if (!_userSetSecurityInitializer)
             {
                 // purposefully use the direct setter vs Set method so we don't flip the switch :/
-                SecurityInitializer = new BrokerageModelSecurityInitializer(model);
+                SecurityInitializer = new BrokerageModelSecurityInitializer(model,
+                                                                            HistoryProvider,
+                                                                            _timeKeeper,
+                                                                            _localTimeKeeper,
+                                                                            LiveMode);
             }
         }
 

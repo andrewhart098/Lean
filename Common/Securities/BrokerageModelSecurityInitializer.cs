@@ -14,7 +14,14 @@
  *
 */
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Securities
 {
@@ -26,15 +33,31 @@ namespace QuantConnect.Securities
     public class BrokerageModelSecurityInitializer : ISecurityInitializer
     {
         private readonly IBrokerageModel _brokerageModel;
+        private readonly IHistoryProvider _historyProvider;
+        private readonly TimeKeeper _timeKeeper;
+        private readonly LocalTimeKeeper _localTimeKeeper;
+        private readonly bool _isLiveMode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
         /// for the specified algorithm
         /// </summary>
         /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
-        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel)
+        /// <param name="historyProvider"><see cref="IHistoryProvider"/> for the algorithm</param>
+        /// <param name="timeKeeper">Used to get the current <see cref="DateTime"/> in UTC</param>
+        /// <param name="localTimeKeeper">Gets the local algorithm time</param>
+        /// <param name="isLiveMode">Indicates whether the algorithm is Live</param>
+        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, 
+                                                 IHistoryProvider historyProvider, 
+                                                 TimeKeeper timeKeeper, 
+                                                 LocalTimeKeeper localTimeKeeper, 
+                                                 bool isLiveMode)
         {
             _brokerageModel = brokerageModel;
+            _historyProvider = historyProvider;
+            _timeKeeper = timeKeeper;
+            _localTimeKeeper = localTimeKeeper;
+            _isLiveMode = isLiveMode;
         }
 
         /// <summary>
@@ -49,6 +72,69 @@ namespace QuantConnect.Securities
             security.FeeModel = _brokerageModel.GetFeeModel(security);
             security.SlippageModel = _brokerageModel.GetSlippageModel(security);
             security.SettlementModel = _brokerageModel.GetSettlementModel(security, _brokerageModel.AccountType);
+
+            // Seed the correct price from the history provider if needed
+            if (_isLiveMode && security.Price == 0)
+            {
+                var request = CreateSingleBarCountHistoryRequests(security);
+                var history = _historyProvider.GetHistory(new List<HistoryRequest>() { request }, _localTimeKeeper.TimeZone);
+
+                try
+                {
+                    if (history.Any())
+                        security.SetMarketPrice(history.First().Values.First());
+                    else
+                        Log.Trace("BrokerageSecurityModel.Initialize(): Could not seed price for security {0} from history.",
+                                  security.Symbol.ID.Symbol);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("BrokerageSecurityModel.Initialize(): Cannot set initial price for security {0}. " +
+                              "Error: {1}", security.Symbol.ID.Symbol, ex.GetBaseException());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create a <see cref="HistoryRequest"/> for 1 bar
+        /// </summary>
+        /// <param name="security">The <see cref="Security"/> for which the history is requested</param>
+        /// <returns><see cref="HistoryRequest"/></returns>
+        private HistoryRequest CreateSingleBarCountHistoryRequests(Security security)
+        {
+            var timeSpan = security.Resolution.ToTimeSpan() < Time.OneSecond ? Time.OneSecond : security.Resolution.ToTimeSpan();
+            var localStartTime = Time.GetStartTimeForTradeBars(security.Exchange.Hours,
+                                                               _timeKeeper.UtcTime.ConvertFromUtc(security.Exchange.TimeZone),
+                                                               timeSpan,
+                                                               1,
+                                                               security.IsExtendedMarketHours);
+            var start = localStartTime.ConvertTo(security.Exchange.TimeZone, _localTimeKeeper.TimeZone);
+            
+            return CreateHistoryRequest(security, 
+                                        start, 
+                                        _localTimeKeeper.LocalTime.RoundDown(security.Resolution.ToTimeSpan()));
+        }
+
+        /// <summary>
+        /// Create the <see cref="HistoryRequest"/>
+        /// </summary>
+        /// <param name="security">The <see cref="Security"/> for which the history is requested</param>
+        /// <param name="startAlgoTz">Start time of the <see cref="HistoryRequest"/></param>
+        /// <param name="endAlgoTz">End time of the <see cref="HistoryRequest"/></param>
+        /// <returns><see cref="HistoryRequest"/></returns>
+        private HistoryRequest CreateHistoryRequest(Security security, DateTime startAlgoTz, DateTime endAlgoTz)
+        {
+            return new HistoryRequest()
+            {
+                StartTimeUtc = startAlgoTz.ConvertToUtc(_localTimeKeeper.TimeZone),
+                EndTimeUtc = endAlgoTz.ConvertToUtc(_localTimeKeeper.TimeZone),
+                DataType = security.Resolution == Resolution.Tick ? typeof(Tick) : typeof(TradeBar),
+                Resolution = security.Resolution,
+                FillForwardResolution = security.Resolution,
+                Symbol = security.Symbol,
+                Market = security.Symbol.ID.Market,
+                ExchangeHours = security.Exchange.Hours
+            };
         }
     }
 }

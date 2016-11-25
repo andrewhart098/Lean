@@ -64,7 +64,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <param name="brokerageModel">The brokerage model used to get fill/fee/slippage/settlement models</param>
             /// <param name="dataNormalizationMode">The desired data normalization mode</param>
             public CustomSecurityInitializer(IBrokerageModel brokerageModel, DataNormalizationMode dataNormalizationMode)
-                : base(brokerageModel)
+                : base(brokerageModel, null, null, null, false)
             {
                 _dataNormalizationMode = dataNormalizationMode;
             }
