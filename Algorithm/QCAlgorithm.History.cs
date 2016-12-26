@@ -429,7 +429,8 @@ namespace QuantConnect.Algorithm
                 FillForwardResolution = resolution,
                 Symbol = security.Symbol,
                 Market = security.Symbol.ID.Market,
-                ExchangeHours = security.Exchange.Hours
+                ExchangeHours = security.Exchange.Hours,
+                SecurityType = security.Symbol.ID.SecurityType
             };
 
             var history = History(new List<HistoryRequest> { request });
