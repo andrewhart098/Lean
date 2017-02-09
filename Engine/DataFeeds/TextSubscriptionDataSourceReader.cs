@@ -196,9 +196,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             // handles zip or text files
-            return _dataFileCacheProvider != null ? 
-                    _dataFileCacheProvider.Fetch(_config.Symbol, source, _date, _config.Resolution, _config.TickType):
-                    new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, file, entryName);
+            return new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, file, entryName);
         }
 
         /// <summary>
