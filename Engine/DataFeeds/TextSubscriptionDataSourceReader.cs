@@ -76,18 +76,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TextSubscriptionDataSourceReader"/> class
-        /// </summary>
-        /// <param name="dataFileProvider">Attempts to fetch remote file provider</param>
-        /// <param name="config">The subscription's configuration</param>
-        /// <param name="date">The date this factory was produced to read data for</param>
-        /// <param name="isLiveMode">True if we're in live mode, false for backtesting</param>
-        public TextSubscriptionDataSourceReader(IDataFileProvider dataFileProvider, SubscriptionDataConfig config, DateTime date, bool isLiveMode)
-            : this(dataFileProvider, null, config, date, isLiveMode)
-        {
-        }
-
-        /// <summary>
         /// Reads the specified <paramref name="source"/>
         /// </summary>
         /// <param name="source">The source to be read</param>
