@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // handles text files
-                return new LocalFileSubscriptionStreamReader(filename, entryName);
+                return new LocalFileSubscriptionStreamReader(this, filename, entryName);
             }
         }
 

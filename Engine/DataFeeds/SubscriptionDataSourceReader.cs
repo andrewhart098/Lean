@@ -43,10 +43,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return new TextSubscriptionDataSourceReader(dataFileProvider, dataFileCacheProvider, config, date, isLiveMode);
 
                 case FileFormat.Collection:
-                    return new CollectionSubscriptionDataSourceReader(config, date, isLiveMode);
+                    return new CollectionSubscriptionDataSourceReader(dataFileProvider, dataFileCacheProvider, config, date, isLiveMode);
 
                 case FileFormat.ZipEntryName:
-                    return new ZipEntryNameSubscriptionDataSourceReader(dataFileProvider, config, date, isLiveMode);
+                    return new ZipEntryNameSubscriptionDataSourceReader(dataFileProvider, dataFileCacheProvider, config, date, isLiveMode);
 
                 default:
                     throw new NotImplementedException("SubscriptionFactory.ForSource(" + source + ") has not been implemented yet.");
