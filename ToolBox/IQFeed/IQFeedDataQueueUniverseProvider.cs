@@ -272,7 +272,7 @@ namespace QuantConnect.ToolBox.IQFeed
             long currentPosition = 0;
             long prevPosition = 0;
 
-            reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName);
+            reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider,todayFullCsvName, DateTime.Now);
 
             while (!reader.EndOfStream)
             {

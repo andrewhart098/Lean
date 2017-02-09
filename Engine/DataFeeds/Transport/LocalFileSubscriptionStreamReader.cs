@@ -39,13 +39,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// <param name="source">The local file to be read</param>
         /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
         /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, string entryName = null)
+        public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, DateTime date, string entryName = null)
         {
             _dataFileCacheProvider = dataFileCacheProvider;
-            // unzip if necessary
-            _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipFile)
-                : new StreamReader(source);
+
+            _streamReader = new StreamReader(
+                                new MemoryStream(_dataFileCacheProvider.Fetch(source, date)));
         }
 
         /// <summary>
@@ -69,25 +68,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
                 _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
             }
 
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LocalFileSubscriptionStreamReader"/> class.
-        /// </summary>
-        /// <param name="zipFile">The local zip archive to be read</param>
-        /// <param name="entryName">Specifies the zip entry to be opened. Leave null if not applicable,
-        /// or to open the first zip entry found regardless of name</param>
-        public LocalFileSubscriptionStreamReader(ZipFile zipFile, string entryName = null)
-        {
-            _zipFile = zipFile;
-            var entry = _zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
-            if (entry != null)
-            {
-                var stream = new MemoryStream();
-                entry.OpenReader().CopyTo(stream);
-                stream.Position = 0;
-                _streamReader = new StreamReader(stream);
-            }
         }
 
         /// <summary>

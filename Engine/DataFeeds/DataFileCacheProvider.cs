@@ -20,6 +20,7 @@ using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using System.Collections.Concurrent;
 using QuantConnect.Logging;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using Ionic.Zip;
 using QuantConnect.Interfaces;
 
@@ -42,15 +43,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution, TickType tickType)
+        public byte[] Fetch(string source, DateTime date)
         {
             string entryName = null; // default to all entries
-            var filename = source.Source;
-            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
+            var filename = source;
+            var hashIndex = source.LastIndexOf("#", StringComparison.Ordinal);
             if (hashIndex != -1)
             {
-                entryName = source.Source.Substring(hashIndex + 1);
-                filename = source.Source.Substring(0, hashIndex);
+                entryName = source.Substring(hashIndex + 1);
+                filename = source.Substring(0, hashIndex);
             }
 
             if (!File.Exists(filename))
@@ -61,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // handles zip files
             if (filename.GetExtension() == ".zip")
             {
-                IStreamReader reader = null;
+                byte[] reader = null;
 
                 try
                 {
@@ -87,12 +88,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         x =>
                         {
                             var newItem = Tuple.Create(date.Date, new ZipFile(filename));
-                            reader = new LocalFileSubscriptionStreamReader(newItem.Item2, entryName);
+                            reader = ObjectToByteArray(GetZipEntryFromArchive(newItem.Item2, entryName));
                             return newItem;
                         },
                         (x, existingEntry) =>
                         {
-                            reader = new LocalFileSubscriptionStreamReader(existingEntry.Item2, entryName);
+                            reader = ObjectToByteArray(GetZipEntryFromArchive(existingEntry.Item2, entryName));
                             return existingEntry;
                         });
 
@@ -101,14 +102,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 catch (Exception err)
                 {
                     Log.Error(err, "Inner try/catch");
-                    if (reader != null) reader.Dispose();
                     return null;
                 }
             }
             else
             {
                 // handles text files
-                return new LocalFileSubscriptionStreamReader(this, filename, entryName);
+                return File.ReadAllBytes(filename);
             }
         }
 
@@ -134,6 +134,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             _zipFileCache.Clear();
+        }
+
+
+        private ZipEntry GetZipEntryFromArchive(ZipFile zipFile, string entryName)
+        {
+            return zipFile.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
+        }
+
+        private byte[] ObjectToByteArray(object obj)
+        {
+            if (obj == null)
+            {
+                return null;
+            }
+
+            BinaryFormatter bf = new BinaryFormatter();
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
         }
     }
 }
