@@ -10,7 +10,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution,
             TickType tickType)
         {
-            return new LocalFileSubscriptionStreamReader(this, source.Source);
+            return new LocalFileSubscriptionStreamReader(this, source.Source, date);
         }
 
         public void Store(string source, byte[] data)
