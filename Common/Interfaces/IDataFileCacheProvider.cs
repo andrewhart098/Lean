@@ -34,7 +34,7 @@ namespace QuantConnect.Interfaces
         /// <param name="resolution">The resolution of the data requested</param>
         /// <param name="tickType">The <see cref="TickType"/> of the data requested from the cache</param>
         /// <returns>An <see cref="IStreamReader"/> that has the data from the cache preloaded</returns>
-        Stream Fetch(string source, DateTime date);
+        Stream Fetch(string source, DateTime date, string entryName);
 
         /// <summary>
         /// Store the data in the cache

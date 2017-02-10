@@ -41,11 +41,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// or to open the first zip entry found regardless of name</param>
         public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, DateTime date, string entryName = null)
         {
-            _dataFileCacheProvider = dataFileCacheProvider;
             // unzip if necessary
-            _streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out _zipFile)
-                : new StreamReader(source);
+            //var stream = source.GetExtension() == ".zip"
+            //    ? Compression.UnzipBaseStream(source, entryName)
+            //    : new FileStream(source, FileMode.Open, FileAccess.Read);
+            //_streamReader = new StreamReader(stream);
+
+            _streamReader = new StreamReader(dataFileCacheProvider.Fetch(source, date, entryName));
         }
 
         /// <summary>

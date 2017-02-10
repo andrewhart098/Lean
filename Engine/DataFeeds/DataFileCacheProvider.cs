@@ -42,9 +42,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public Stream Fetch(string source, DateTime date)
+        public Stream Fetch(string source, DateTime date, string entryName)
         {
-            string entryName = null; // default to all entries
+            return source.GetExtension() == ".zip"
+                ? Compression.UnzipBaseStream(source, entryName)
+                : new FileStream(source, FileMode.Open, FileAccess.Read);
+
+            //entryName = null; // default to all entries
             var filename = source;
             var hashIndex = source.LastIndexOf("#", StringComparison.Ordinal);
             if (hashIndex != -1)

@@ -8,14 +8,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 {
     public class DefaultDataFileCacheProvider : IDataFileCacheProvider
     {
-        public Stream Fetch(string source, DateTime date)
+        public Stream Fetch(string source, DateTime date, string entryName)
         {
-            if (!File.Exists(source))
-            {
-                return null;
-            }
-
-            return new MemoryStream(File.ReadAllBytes(source));
+           return source.GetExtension() == ".zip"
+                ? Compression.UnzipBaseStream(source, entryName)
+                : new FileStream(source, FileMode.Open, FileAccess.Read);
         }
 
         public void Store(string source, byte[] data)
