@@ -44,10 +44,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public Stream Fetch(string source, DateTime date, string entryName)
         {
-            return source.GetExtension() == ".zip"
-                ? Compression.UnzipBaseStream(source, entryName)
-                : new FileStream(source, FileMode.Open, FileAccess.Read);
-
             //entryName = null; // default to all entries
             var filename = source;
             var hashIndex = source.LastIndexOf("#", StringComparison.Ordinal);
@@ -112,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // handles text files
-                return CreateStream(filename, entryName);
+                return new FileStream(source, FileMode.Open, FileAccess.Read);
             }
         }
 
@@ -145,21 +141,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var entry = zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
             if (entry != null)
             {
-                var stream = new MemoryStream();
-                entry.OpenReader().CopyTo(stream);
-                stream.Position = 0;
-                return stream;
+                return entry.InputStream;
             }
 
             return null;
-        }
-
-
-        private Stream CreateStream(string source, string entryName)
-        {
-            return source.GetExtension() == ".zip"
-                ? Compression.UnzipBaseStream(source, entryName)
-                : new FileStream(source, FileMode.Open, FileAccess.Read);
         }
     }
 }
