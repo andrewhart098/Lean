@@ -38,6 +38,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // ZipArchive cache used by the class
         private readonly ConcurrentDictionary<string, Lazy<CacheEntry>> _zipFileCache = new ConcurrentDictionary<string, Lazy<CacheEntry>>();
         private DateTime _lastDate = DateTime.MinValue;
+        private IDataProvider _dataProvider;
+
+        public DataCacheProvider(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
 
         /// <summary>
         /// Does not attempt to retrieve any data

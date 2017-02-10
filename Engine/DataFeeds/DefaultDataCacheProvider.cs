@@ -7,12 +7,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class DefaultDataCacheProvider : IDataCacheProvider
     {
         private ZipFile _zipFile;
+        private IDataProvider _dataProvider;
+
+        public DefaultDataCacheProvider(IDataProvider dataProvider)
+        {
+            _dataProvider = dataProvider;
+        }
 
         public Stream Fetch(string source, string entryName)
         {
-           return source.GetExtension() == ".zip"
-                ? Compression.UnzipBaseStream(source, entryName, out _zipFile)
-                : new FileStream(source, FileMode.Open, FileAccess.Read);
+            return _dataProvider.Fetch(source, entryName);
         }
 
         public void Store(string source, byte[] data)

@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var config = new SubscriptionDataConfig(typeof (ZipEntryName), Symbol.Create("XLRE", SecurityType.Option, Market.USA), Resolution.Tick,
                 TimeZones.NewYork, TimeZones.NewYork, false, false, false);
             var dataProvider = new DefaultDataProvider();
-            var dataCacheProvider = new DefaultDataCacheProvider();
+            var dataCacheProvider = new DefaultDataCacheProvider(dataProvider);
             var factory = new ZipEntryNameSubscriptionDataSourceReader(dataProvider, dataCacheProvider, config, time, false);
             var expected = new[]
             {

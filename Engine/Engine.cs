@@ -133,7 +133,7 @@ namespace QuantConnect.Lean.Engine
                             _algorithmHandlers.Results.SendStatusUpdate(AlgorithmStatus.History, 
                                 string.Format("Processing history {0}%...", progress));
                         }
-                    }, new DefaultDataCacheProvider());
+                    }, new DefaultDataCacheProvider(_algorithmHandlers.DataProvider));
 
                     algorithm.HistoryProvider = historyProvider;
 

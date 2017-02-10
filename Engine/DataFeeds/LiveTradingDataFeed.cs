@@ -45,7 +45,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private SecurityChanges _changes = SecurityChanges.None;
         private static readonly Symbol DataQueueHandlerSymbol = Symbol.Create("data-queue-handler-symbol", SecurityType.Base, Market.USA);
-        private readonly DefaultDataCacheProvider _dataCacheProvider = new DefaultDataCacheProvider();
 
         private LiveNodePacket _job;
         private IAlgorithm _algorithm;
@@ -54,6 +53,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // used to keep time constant during a time sync iteration
         private ManualTimeProvider _frontierTimeProvider;
         private IDataProvider _dataProvider;
+        private DefaultDataCacheProvider _dataCacheProvider;
 
         private Ref<TimeSpan> _fillForwardResolution;
         private IResultHandler _resultHandler;
@@ -101,6 +101,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _timeProvider = GetTimeProvider();
             _dataQueueHandler = GetDataQueueHandler();
             _dataProvider = dataProvider;
+            _dataCacheProvider = new DefaultDataCacheProvider(dataProvider);
 
             _frontierTimeProvider = new ManualTimeProvider(_timeProvider.GetUtcNow());
             _customExchange = new BaseDataExchange("CustomDataExchange") {SleepInterval = 10};

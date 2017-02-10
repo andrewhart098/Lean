@@ -29,9 +29,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Read data from disc
+        /// 
         /// </summary>
         public Stream Fetch(string source, string entryName)
         {
+            if (!File.Exists(source))
+            {
+                return null;
+            }
+
             return source.GetExtension() == ".zip"
                 ? Compression.UnzipBaseStream(source, entryName, out _zipFile)
                 : new FileStream(source, FileMode.Open, FileAccess.Read);

@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly IResultHandler _resultHandler;
         private readonly IFactorFileProvider _factorFileProvider;
         private readonly IDataProvider _dataProvider;
-        private readonly DataCacheProvider _dataCacheProvider = new DataCacheProvider();
+        private DataCacheProvider _dataCacheProvider;
         private readonly Func<SubscriptionRequest, IEnumerable<DateTime>> _tradableDaysProvider;
         private readonly IMapFileProvider _mapFileProvider;
 
@@ -63,6 +63,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _mapFileProvider = mapFileProvider;
             _factorFileProvider = factorFileProvider;
             _dataProvider = dataProvider;
+            _dataCacheProvider = new DataCacheProvider(dataProvider);
             _isLiveMode = isLiveMode;
             _includeAuxiliaryData = includeAuxiliaryData;
             _tradableDaysProvider = tradableDaysProvider ?? (request => request.TradableDays);
