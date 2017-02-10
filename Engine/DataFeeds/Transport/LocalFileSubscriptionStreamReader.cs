@@ -41,7 +41,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// or to open the first zip entry found regardless of name</param>
         public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, DateTime date, string entryName = null)
         {
-            _streamReader = new StreamReader(dataFileCacheProvider.Fetch(source, date, entryName));
+            var stream = dataFileCacheProvider.Fetch(source, date, entryName);
+
+            if (stream != null)
+            {
+                _streamReader = new StreamReader(stream);
+            }
         }
 
         /// <summary>
@@ -53,13 +58,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         /// or to open the first zip entry found regardless of name</param>
         public LocalFileSubscriptionStreamReader(IDataFileCacheProvider dataFileCacheProvider, string source, string entryName, DateTime date, long startingPosition)
         {
-            _streamReader = new StreamReader(dataFileCacheProvider.Fetch(source, date, entryName));
+            var stream = dataFileCacheProvider.Fetch(source, date, entryName);
 
-            if (startingPosition != 0)
+            if (stream != null)
             {
-                _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
-            }
+                _streamReader = new StreamReader(stream);
 
+                if (startingPosition != 0)
+                {
+                    _streamReader.BaseStream.Seek(startingPosition, SeekOrigin.Begin);
+                }
+            }
         }
 
         /// <summary>

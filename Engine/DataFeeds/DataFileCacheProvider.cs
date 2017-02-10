@@ -141,7 +141,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var entry = zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
             if (entry != null)
             {
-                return entry.InputStream;
+                var stream = new MemoryStream();
+                entry.OpenReader().CopyTo(stream);
+                stream.Position = 0;
+                return stream;
             }
 
             return null;
