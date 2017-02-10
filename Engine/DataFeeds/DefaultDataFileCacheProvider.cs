@@ -7,10 +7,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 {
     public class DefaultDataFileCacheProvider : IDataFileCacheProvider
     {
-        public IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution,
-            TickType tickType)
+        public IStreamReader Fetch(string source, DateTime date)
         {
-            return new LocalFileSubscriptionStreamReader(this, source.Source, date);
+            return new LocalFileSubscriptionStreamReader(this, source, date);
         }
 
         public void Store(string source, byte[] data)

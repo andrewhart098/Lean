@@ -42,15 +42,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public IStreamReader Fetch(Symbol symbol, SubscriptionDataSource source, DateTime date, Resolution resolution, TickType tickType)
+        public IStreamReader Fetch(string source, DateTime date)
         {
             string entryName = null; // default to all entries
-            var filename = source.Source;
-            var hashIndex = source.Source.LastIndexOf("#", StringComparison.Ordinal);
+            var filename = source;
+            var hashIndex = source.LastIndexOf("#", StringComparison.Ordinal);
             if (hashIndex != -1)
             {
-                entryName = source.Source.Substring(hashIndex + 1);
-                filename = source.Source.Substring(0, hashIndex);
+                entryName = source.Substring(hashIndex + 1);
+                filename = source.Substring(0, hashIndex);
             }
 
             if (!File.Exists(filename))
