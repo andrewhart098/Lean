@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public IStreamReader Fetch(string source, DateTime date)
+        public Stream Fetch(string source, DateTime date)
         {
             string entryName = null; // default to all entries
             var filename = source;
@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // handles zip files
             if (filename.GetExtension() == ".zip")
             {
-                IStreamReader reader = null;
+                Stream reader = null;
 
                 try
                 {
@@ -87,12 +87,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         x =>
                         {
                             var newItem = Tuple.Create(date.Date, new ZipFile(filename));
-                            reader = new LocalFileSubscriptionStreamReader(newItem.Item2, entryName);
+                            reader = CreateStream(newItem.Item2, entryName);
                             return newItem;
                         },
                         (x, existingEntry) =>
                         {
-                            reader = new LocalFileSubscriptionStreamReader(existingEntry.Item2, entryName);
+                            reader = CreateStream(existingEntry.Item2, entryName);
                             return existingEntry;
                         });
 
@@ -108,7 +108,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             else
             {
                 // handles text files
-                return new LocalFileSubscriptionStreamReader(this, filename, date, entryName);
+                return CreateStream(filename, entryName);
             }
         }
 
@@ -134,6 +134,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             _zipFileCache.Clear();
+        }
+
+        private Stream CreateStream(ZipFile zipFile, string entryName)
+        {
+            var entry = zipFile.Entries.FirstOrDefault(x => entryName == null || string.Compare(x.FileName, entryName, StringComparison.OrdinalIgnoreCase) == 0);
+            if (entry != null)
+            {
+                var stream = new MemoryStream();
+                entry.OpenReader().CopyTo(stream);
+                stream.Position = 0;
+                return stream;
+            }
+
+            return null;
+        }
+
+
+        private Stream CreateStream(string source, string entryName)
+        {
+            ZipFile zipFile;
+
+            var streamReader = source.GetExtension() == ".zip"
+                ? Compression.Unzip(source, entryName, out zipFile)
+                : new StreamReader(source);
+
+            return streamReader.BaseStream;
         }
     }
 }
