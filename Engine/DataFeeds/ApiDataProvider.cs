@@ -28,37 +28,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class ApiDataProvider : IDataProvider
     {
+        private DefaultDataProvider defaultDataProvider = new DefaultDataProvider();
+
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
         public Stream Fetch(string source, string entryName)
         {
-            //Log.Trace(
-            //    string.Format(
-            //        "Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
-            //        symbol.ID, resolution, PythonDateTime.date.Date.ToShortDateString()));
+            var dataAlreadyOnDisk = defaultDataProvider.Fetch(source, entryName);
 
-            //var api = new Api.Api();
-            //api.Initialize(_uid, _token, _dataPath);
+            if (dataAlreadyOnDisk != null)
+            {
+                Log.Trace("Data was already present on disc for path {0} and entry name {1}. Returning data on disc.", source, entryName);
+                return dataAlreadyOnDisk;
+            }
+            
+            Log.Trace(
+                string.Format(
+                    "Attempting to get data from QuantConnect.com's data library for path: {0} and entryName: {1}", source, entryName));
 
-            //var download = api.DownloadData(symbol, resolution, PythonDateTime.date);
+            var api = new Api.Api();
+            api.Initialize(_uid, _token, _dataPath);
 
-            //if (download)
-            //{
-            //    Log.Trace(
-            //        string.Format(
-            //            "Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-            //            symbol.ID, resolution, PythonDateTime.date.Date.ToShortDateString()));
-            //    return true;
-            //}
+            var download = api.DownloadData(source, entryName);
+
+            if (download)
+            {
+                Log.Trace(
+                    string.Format(
+                        "Successfully able to retrieve data from QuantConnect.com's data library for path: {0} and entryName: {1}", source, entryName));
+
+                return defaultDataProvider.Fetch(source, entryName);                
+            }
 
 
-            //Log.Error(
-            //        string.Format(
-            //            "Unable to remotely retrieve data for symbol({0}), resolution({1}) and date({2}). Please make sure you have the necessary data in your online QuantConnect data library.",
-            //            symbol.ID, resolution, PythonDateTime.date.Date.ToShortDateString()));
-            //return false;
-            return new MemoryStream();
+            Log.Error(
+                    string.Format(
+                        "Unable to remotely retrieve data for for path: {0} and entryName: {1}. Please make sure you have the necessary data in your online QuantConnect data library.",
+                            source, entryName));
+
+            return null;
         }
     }
 }
