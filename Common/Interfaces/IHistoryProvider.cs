@@ -43,7 +43,7 @@ namespace QuantConnect.Interfaces
         /// <param name="dataFileProvider">Provider used to get data when it is not present on disk</param>
         /// <param name="statusUpdate">Function used to send status updates</param>
         /// <param name="dataFileCacheProvider">Provider used to cache history data files</param>
-        void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate, IDataFileCacheProvider dataFileCacheProvider = null);
+        void Initialize(AlgorithmNodePacket job, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider, IDataFileProvider dataFileProvider, Action<int> statusUpdate, IDataFileCacheProvider dataFileCacheProvider);
 
         /// <summary>
         /// Gets the history for the requested securities

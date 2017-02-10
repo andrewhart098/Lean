@@ -39,7 +39,8 @@ namespace QuantConnect.Tests.Common.Securities
                                        new LocalDiskMapFileProvider(),
                                        new LocalDiskFactorFileProvider(),
                                        new DefaultDataFileProvider(),
-                                       null);
+                                       null,
+                                       new DefaultDataFileCacheProvider());
 
             _algo.HistoryProvider = historyProvider;
 
