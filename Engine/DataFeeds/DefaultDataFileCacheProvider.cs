@@ -1,9 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Ionic.Zip;
-using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -11,7 +8,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private ZipFile _zipFile;
 
-        public Stream Fetch(string source, DateTime date, string entryName)
+        public Stream Fetch(string source, string entryName)
         {
            return source.GetExtension() == ".zip"
                 ? Compression.UnzipBaseStream(source, entryName, out _zipFile)

@@ -82,7 +82,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         reader = new RestSubscriptionStreamReader(source.Source);
                         break;
                     case SubscriptionTransportMedium.LocalFile:
-                        reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, source.Source, _date);
+                        reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, source.Source);
                         break;
                     case SubscriptionTransportMedium.RemoteFile:
                         reader = new RemoteFileSubscriptionStreamReader(_dataFileCacheProvider, source.Source, Globals.Cache, _date);

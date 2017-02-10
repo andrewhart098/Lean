@@ -272,7 +272,7 @@ namespace QuantConnect.ToolBox.IQFeed
             long currentPosition = 0;
             long prevPosition = 0;
 
-            reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName, DateTime.MinValue);
+            reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName);
 
             while (!reader.EndOfStream)
             {
@@ -436,7 +436,7 @@ namespace QuantConnect.ToolBox.IQFeed
             var todayCsvFileName = "mktsymbols_v2.txt";
             var todayFullCsvName = Path.Combine(Globals.Cache, todayCsvFileName);
 
-            var reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName, null, DateTime.MinValue, placeholder.StartPosition);
+            var reader = new LocalFileSubscriptionStreamReader(_dataFileCacheProvider, todayFullCsvName, null, placeholder.StartPosition);
 
             Log.Trace("Loading data on demand for {0}...", placeholder.Symbol.Underlying.Value);
 

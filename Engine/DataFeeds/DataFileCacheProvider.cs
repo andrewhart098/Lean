@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Does not attempt to retrieve any data
         /// </summary>
-        public Stream Fetch(string source, DateTime date, string entryName)
+        public Stream Fetch(string source, string entryName)
         {
             //entryName = null; // default to all entries
             var filename = source;
@@ -63,26 +63,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 Stream reader = null;
 
-                try
+                var date = DateTime.Now.Date.AddSeconds(-CachePeriodBars);
+                //// cleaning the outdated cache items
+                if (_lastDate == DateTime.MinValue || _lastDate < date)
                 {
-                    // cleaning the outdated cache items
-                    if (_lastDate == DateTime.MinValue || _lastDate < date.Date)
+                    // clean all items that that are older than _cachePeriodBars bars than the current date
+                    foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date))
                     {
-                        // clean all items that that are older than _cachePeriodBars bars than the current date
-                        foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-CachePeriodBars)))
+                        // removing it from the cache
+                        Lazy<CacheEntry> removed;
+                        if (_zipFileCache.TryRemove(zip.Key, out removed))
                         {
-                            // removing it from the cache
-                            Lazy<CacheEntry> removed;
-                            if (_zipFileCache.TryRemove(zip.Key, out removed))
-                            {
-                                // disposing zip archive
-                                removed.Value.Item2.Dispose();
-                            }
+                            // disposing zip archive
+                            removed.Value.Item2.Dispose();
                         }
-
-                        _lastDate = date.Date;
                     }
 
+                    _lastDate = date.Date;
+                }
+
+                try
+                {
                     _zipFileCache.AddOrUpdate(filename,
                         x =>
                         {
@@ -151,3 +152,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
     }
 }
+
+//// cleaning the outdated cache items
+//if (_lastDate == DateTime.MinValue || _lastDate < date.Date)
+//{
+//    // clean all items that that are older than _cachePeriodBars bars than the current date
+//    foreach (var zip in _zipFileCache.Where(x => x.Value.Value.Item1 < date.Date.AddDays(-CachePeriodBars)))
+//    {
+//        // removing it from the cache
+//        Lazy<CacheEntry> removed;
+//        if (_zipFileCache.TryRemove(zip.Key, out removed))
+//        {
+//            // disposing zip archive
+//            removed.Value.Item2.Dispose();
+//        }
+//    }
+
+//    _lastDate = date.Date;
+//}

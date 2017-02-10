@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
             }
 
             // now we can just use the local file reader
-            _streamReader = new LocalFileSubscriptionStreamReader(dataFileCacheProvider, destination, date);
+            _streamReader = new LocalFileSubscriptionStreamReader(dataFileCacheProvider, destination);
         }
 
         /// <summary>
