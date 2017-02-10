@@ -153,13 +153,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         private Stream CreateStream(string source, string entryName)
         {
-            ZipFile zipFile;
-
-            var streamReader = source.GetExtension() == ".zip"
-                ? Compression.Unzip(source, entryName, out zipFile)
-                : new StreamReader(source);
-
-            return streamReader.BaseStream;
+            return source.GetExtension() == ".zip"
+                ? Compression.UnzipBaseStream(source, entryName)
+                : new FileStream(source, FileMode.Open, FileAccess.Read);
         }
     }
 }
