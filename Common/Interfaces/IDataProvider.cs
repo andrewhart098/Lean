@@ -15,6 +15,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.IO;
 
 namespace QuantConnect.Interfaces
 {
@@ -33,6 +34,6 @@ namespace QuantConnect.Interfaces
         /// <param name="date">DateTime of the data requested</param>
         /// <param name="tickType"><see cref="TickType"/> of the security</param>
         /// <returns>Bool indicating whether the remote file was fetched correctly</returns>
-        bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType);
+        Stream Fetch(string source, string entryName);
     }
 }

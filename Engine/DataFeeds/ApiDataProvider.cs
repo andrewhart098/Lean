@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.IO;
+using IronPython.Modules;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -29,33 +31,34 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");
         private readonly string _dataPath = Config.Get("data-folder", "../../../Data/");
-        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        public Stream Fetch(string source, string entryName)
         {
-            Log.Trace(
-                string.Format(
-                    "Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
-                    symbol.ID, resolution, date.Date.ToShortDateString()));
+            //Log.Trace(
+            //    string.Format(
+            //        "Attempting to get data from QuantConnect.com's data library for symbol({0}), resolution({1}) and date({2}).",
+            //        symbol.ID, resolution, PythonDateTime.date.Date.ToShortDateString()));
 
-            var api = new Api.Api();
-            api.Initialize(_uid, _token, _dataPath);
+            //var api = new Api.Api();
+            //api.Initialize(_uid, _token, _dataPath);
 
-            var download = api.DownloadData(symbol, resolution, date);
+            //var download = api.DownloadData(symbol, resolution, PythonDateTime.date);
 
-            if (download)
-            {
-                Log.Trace(
-                    string.Format(
-                        "Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
-                        symbol.ID, resolution, date.Date.ToShortDateString()));
-                return true;
-            }
+            //if (download)
+            //{
+            //    Log.Trace(
+            //        string.Format(
+            //            "Successfully retrieved data for symbol({0}), resolution({1}) and date({2}).",
+            //            symbol.ID, resolution, PythonDateTime.date.Date.ToShortDateString()));
+            //    return true;
+            //}
 
 
-            Log.Error(
-                    string.Format(
-                        "Unable to remotely retrieve data for symbol({0}), resolution({1}) and date({2}). Please make sure you have the necessary data in your online QuantConnect data library.",
-                        symbol.ID, resolution, date.Date.ToShortDateString()));
-            return false;
+            //Log.Error(
+            //        string.Format(
+            //            "Unable to remotely retrieve data for symbol({0}), resolution({1}) and date({2}). Please make sure you have the necessary data in your online QuantConnect data library.",
+            //            symbol.ID, resolution, PythonDateTime.date.Date.ToShortDateString()));
+            //return false;
+            return new MemoryStream();
         }
     }
 }

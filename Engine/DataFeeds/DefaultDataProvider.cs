@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.IO;
+using Ionic.Zip;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -21,14 +23,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Default file provider functionality that does not attempt to retrieve any data
     /// </summary>
-    public class DefaultDataProvider : IDataProvider
+    public class DefaultDataProvider : IDataProvider, IDisposable
     {
+        private ZipFile _zipFile;
+
         /// <summary>
-        /// Does not attempt to retrieve any data
+        /// Read data from disc
         /// </summary>
-        public bool Fetch(Symbol symbol, DateTime date, Resolution resolution, TickType tickType)
+        public Stream Fetch(string source, string entryName)
         {
-            return false;
+            return source.GetExtension() == ".zip"
+                ? Compression.UnzipBaseStream(source, entryName, out _zipFile)
+                : new FileStream(source, FileMode.Open, FileAccess.Read);
+        }
+
+        public void Dispose()
+        {
+            if (_zipFile != null)
+            {
+                _zipFile.Dispose();
+            }
         }
     }
 }
