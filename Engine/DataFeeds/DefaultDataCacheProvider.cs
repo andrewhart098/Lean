@@ -4,7 +4,7 @@ using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
-    public class DefaultDataFileCacheProvider : IDataFileCacheProvider
+    public class DefaultDataCacheProvider : IDataCacheProvider
     {
         private ZipFile _zipFile;
 

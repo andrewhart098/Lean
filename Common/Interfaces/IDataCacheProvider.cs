@@ -23,7 +23,7 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Defines a cache for data
     /// </summary>
-    public interface IDataFileCacheProvider : IDisposable
+    public interface IDataCacheProvider : IDisposable
     {
         /// <summary>
         /// Fetch data from the cache
