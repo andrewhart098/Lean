@@ -21,7 +21,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// <summary>
     /// Default file provider functionality that does not attempt to retrieve any data
     /// </summary>
-    public class DefaultDataFileProvider : IDataFileProvider
+    public class DefaultDataProvider : IDataProvider
     {
         /// <summary>
         /// Does not attempt to retrieve any data

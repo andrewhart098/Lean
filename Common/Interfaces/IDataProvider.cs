@@ -22,8 +22,8 @@ namespace QuantConnect.Interfaces
     /// Fetches a remote file for a security.
     /// Must save the file to Globals.DataFolder.
     /// </summary>
-    [InheritedExport(typeof(IDataFileProvider))]
-    public interface IDataFileProvider
+    [InheritedExport(typeof(IDataProvider))]
+    public interface IDataProvider
     {
         /// <summary>
         /// Gets and downloads the remote file

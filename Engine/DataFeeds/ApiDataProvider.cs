@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// Attempts to download data from the api and save it in the data folder specified in config.json.
     /// This implementation will overwrite data if it already exists.
     /// </summary>
-    public class ApiDataFileProvider : IDataFileProvider
+    public class ApiDataProvider : IDataProvider
     {
         private readonly int _uid = Config.GetInt("job-user-id", 0);
         private readonly string _token = Config.Get("api-access-token", "1");

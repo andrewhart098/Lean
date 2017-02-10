@@ -174,7 +174,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="AlgorithmManager.cs" />
-    <Compile Include="DataFeeds\ApiDataFileProvider.cs" />
+    <Compile Include="DataFeeds\ApiDataProvider.cs" />
     <Compile Include="DataFeeds\DefaultDataCacheProvider.cs" />
     <Compile Include="DataFeeds\Enumerators\BaseDataCollectionAggregatorEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\EnqueueableEnumerator.cs" />
@@ -201,7 +201,7 @@
     <Compile Include="DataFeeds\Enumerators\SynchronizingEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\QuoteBarBuilderEnumerator.cs" />
     <Compile Include="DataFeeds\Enumerators\TradeBarBuilderEnumerator.cs" />
-    <Compile Include="DataFeeds\DefaultDataFileProvider.cs" />
+    <Compile Include="DataFeeds\DefaultDataProvider.cs" />
     <Compile Include="DataFeeds\ISubscriptionDataSourceReader.cs" />
     <Compile Include="DataFeeds\ITimeProvider.cs" />
     <Compile Include="DataFeeds\CollectionSubscriptionDataSourceReader.cs" />
