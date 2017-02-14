@@ -28,27 +28,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
+            SetStartDate(2017, 01, 01);  //Set Start Date
+            SetEndDate(2017, 02, 14);    //Set End Date
             SetCash(100000);             //Set Strategy Cash
             // Find more symbols here: http://quantconnect.com/data
-            AddForex("EURUSD", Resolution.Minute);
-            AddForex("GBPUSD", Resolution.Minute);
-            AddForex("EURGBP", Resolution.Minute);
+            AddForex("EURUSD", Resolution.Tick);
+            //AddForex("EURCHF", Resolution.Tick);
+            //AddForex("EURGBP", Resolution.Tick);
+            ////AddForex("NZDUSD", Resolution.Tick);
+            //AddForex("USDCAD", Resolution.Tick);
 
-            History(5, Resolution.Daily);
-            History(5, Resolution.Hour);
-            History(5, Resolution.Minute);
-
-            var history = History(System.TimeSpan.FromSeconds(5), Resolution.Second);
-
-            foreach (var data in history.OrderBy(x => x.Time))
-            {
-                foreach (var key in data.Keys)
-                {
-                    Log(key.Value + ": " + data.Time + " > " + data[key].Value);
-                }
-            }
         }
 
         /// <summary>
