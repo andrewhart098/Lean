@@ -391,9 +391,6 @@ namespace QuantConnect.AlgorithmFactory
                     return new UnsuccessfulAnalysis(failureMessage);
                 }
 
-                // Create the algorithm instance in memory from the DLL
-                Log.Trace("Loader.AnalyzeAlgorithm(): Creating algorithm instance: " + algorithmLocation);
-
                 var algoIsolator = new Isolator();
                 var historyProviderStub = new HistoryProviderStub();
                 var complete = algoIsolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(1000), () =>
@@ -417,7 +414,6 @@ namespace QuantConnect.AlgorithmFactory
                 }
 
                 // Run Initialize()
-                Log.Trace("Loader.AnalyzeAlgorithm(): Loading Algorithm to Initialize Dates, Cash and Stocks...");
                 var initIsolator = new Isolator();
                 complete = initIsolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(30), () =>
                 {
@@ -431,14 +427,12 @@ namespace QuantConnect.AlgorithmFactory
                     catch (Exception err)
                     {
                         algorithm.ErrorMessages.Enqueue(err.Message);
-                        Log.Error(err, "Loader.AnalyzeAlgorithm(): Error Initializing Algorithm:");
                     }
                 }, ramAllocation);
 
                 // Check for timeouts
                 if (!complete)
                 {
-                    Log.Error("Loader.AnalyzeAlgorithm(): Initialize didn't complete in time.");
                     failureMessage = "Failed to run Initialize() function in QCAlgorithm. This may be from excessive initialization code or a bug in the Initialize() function.";
                     return new UnsuccessfulAnalysis(failureMessage);
                 }
@@ -452,13 +446,10 @@ namespace QuantConnect.AlgorithmFactory
                 // Check starting cash
                 if (algorithm.Portfolio.Cash < 1000)
                 {
-                    Log.Error("Loader.AnalyzeAlgorithm(): Portfolio cash too small, terminated.");
                     return new UnsuccessfulAnalysis("Portfolio cash too small, algorithm terminated. We recommend backtesting with a minimum of $1,000 cash.");
                 }
 
                 var success = new SuccessfulAnalysis(algorithm.StartDate, algorithm.EndDate, algorithm.Portfolio.Cash, Time.TradeableDates(algorithm.Securities.Values, algorithm.StartDate, algorithm.EndDate));
-
-                Log.Trace("Loader.AnalyzeAlgorithm(): Start Date: " + success.PeriodStart.ToShortDateString() + " End Date: " + success.PeriodEnd.ToShortDateString() + " Cash: " + success.StartingCapital);
 
                 // Check for tradeable dates and at least one security
                 if (success.TradeableDates == 0 && algorithm.UniverseManager.Count == 0)
@@ -481,7 +472,6 @@ namespace QuantConnect.AlgorithmFactory
             catch (Exception err)
             {
                 failureMessage = "Error initializing algorithm for backtest check: " + err.Message;
-                Log.Error(failureMessage);
                 return new UnsuccessfulAnalysis(failureMessage);
             }
         }
@@ -526,7 +516,6 @@ namespace QuantConnect.AlgorithmFactory
             }
             foreach (var error in algorithm.ErrorMessages)
             {
-                Log.Error("Loader.GetAlgorithmInitializeErrors(): User error messages: " + error);
                 errorMessage.Add("Error initializing algorithm: " + error);
             }
 
