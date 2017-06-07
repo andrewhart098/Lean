@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace QuantConnect.AlgorithmFactory.Analyze
 {
@@ -31,6 +32,11 @@ namespace QuantConnect.AlgorithmFactory.Analyze
         public UnsuccessfulAnalysis(string errorMessage) : base(AnalysisResult.Failure)
         {
             FailureMessage.Add(errorMessage);
+        }
+
+        [JsonConstructor]
+        public UnsuccessfulAnalysis() : base(AnalysisResult.Failure)
+        {
         }
 
         /// <summary>
@@ -67,6 +73,11 @@ namespace QuantConnect.AlgorithmFactory.Analyze
             PeriodEnd = end;
             TradeableDates = tradeableDates;
             StartingCapital = capital;
+        }
+
+        [JsonConstructor]
+        public SuccessfulAnalysis() : base(AnalysisResult.Success)
+        {
         }
 
         /// <summary>
