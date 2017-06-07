@@ -23,6 +23,7 @@ using System.Security.Policy;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using Python.Runtime;
+using QuantConnect.AlgorithmFactory.Analyze;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Util;
 
@@ -370,6 +371,194 @@ namespace QuantConnect.AlgorithmFactory
             return complete && success && algorithmInstance != null;
         }
 
+        public AnalysisResultBase Analyze(string algorithmLocation, Dictionary<string, string> parameters = null, int ramAllocation = 512)
+        {
+            var algorithm = default(IAlgorithm);
+            var loadedSuccessfully = false;
+            var failureMessage = "";
+            var loaderErrorMessage = "";
+            if (parameters == null)
+            {
+                parameters = new Dictionary<string, string>();
+            }
+
+            try
+            {
+                // Verify the algorithm exists:
+                if (!File.Exists(algorithmLocation))
+                {
+                    failureMessage = "Could not find the algorithm DLL in uploaded files. If uploading a custom DLL please ensure it inherits class QCAlgorithm to match the interface.";
+                    return new UnsuccessfulAnalysis(failureMessage);
+                }
+
+                // Create the algorithm instance in memory from the DLL
+                Log.Trace("Loader.AnalyzeAlgorithm(): Creating algorithm instance: " + algorithmLocation);
+
+                var algoIsolator = new Isolator();
+                var historyProviderStub = new HistoryProviderStub();
+                var complete = algoIsolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(1000), () =>
+                {
+                    loadedSuccessfully = TryCreateAlgorithmInstance(algorithmLocation, out algorithm, out loaderErrorMessage);
+                    if (algorithm != null) algorithm.HistoryProvider = historyProviderStub;
+                }, ramAllocation);
+
+                // Make sure the algorithm instance created
+                if (!complete)
+                {
+                    failureMessage = "Failed to create instance of QCAlgorithm. This may be from a malformed DLL, upload error, or runtime error in the algorithm constructor.";
+                    return new UnsuccessfulAnalysis(failureMessage);
+                }
+
+                // Make sure the algorithm instance was loaded successfully
+                if (!loadedSuccessfully)
+                {
+                    failureMessage = "Could not create instance of QCAlgorithm class. Ensure there is one class inheriting from QCAlgorithm and it overrides Initialize(). Inner Error: " + loaderErrorMessage;
+                    return new UnsuccessfulAnalysis(failureMessage);
+                }
+
+                // Run Initialize()
+                Log.Trace("Loader.AnalyzeAlgorithm(): Loading Algorithm to Initialize Dates, Cash and Stocks...");
+                var initIsolator = new Isolator();
+                complete = initIsolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(30), () =>
+                {
+                    try
+                    {
+                        //Set our parameters
+                        algorithm.SetParameters(parameters);
+                        algorithm.Initialize();
+                        CheckWarmupPeriod(algorithm);
+                    }
+                    catch (Exception err)
+                    {
+                        algorithm.ErrorMessages.Enqueue(err.Message);
+                        Log.Error(err, "Loader.AnalyzeAlgorithm(): Error Initializing Algorithm:");
+                    }
+                }, ramAllocation);
+
+                // Check for timeouts
+                if (!complete)
+                {
+                    Log.Error("Loader.AnalyzeAlgorithm(): Initialize didn't complete in time.");
+                    failureMessage = "Failed to run Initialize() function in QCAlgorithm. This may be from excessive initialization code or a bug in the Initialize() function.";
+                    return new UnsuccessfulAnalysis(failureMessage);
+                }
+
+                // Check for IAlgorithm.Initialize() errors
+                if (algorithm.ErrorMessages.Count > 0)
+                {
+                    return GetAlgorithmInitializeErrors(historyProviderStub, algorithm);
+                }
+
+                // Check starting cash
+                if (algorithm.Portfolio.Cash < 1000)
+                {
+                    Log.Error("Loader.AnalyzeAlgorithm(): Portfolio cash too small, terminated.");
+                    return new UnsuccessfulAnalysis("Portfolio cash too small, algorithm terminated. We recommend backtesting with a minimum of $1,000 cash.");
+                }
+
+                var success = new SuccessfulAnalysis(algorithm.StartDate, algorithm.EndDate, algorithm.Portfolio.Cash, Time.TradeableDates(algorithm.Securities.Values, algorithm.StartDate, algorithm.EndDate));
+
+                Log.Trace("Loader.AnalyzeAlgorithm(): Start Date: " + success.PeriodStart.ToShortDateString() + " End Date: " + success.PeriodEnd.ToShortDateString() + " Cash: " + success.StartingCapital);
+
+                // Check for tradeable dates and at least one security
+                if (success.TradeableDates == 0 && algorithm.UniverseManager.Count == 0)
+                {
+                    return GetTradableSecurities(algorithm, success);
+                }
+
+                // Check if date range is sane
+                var allQuantConnectData = algorithm.Securities.Values.All(x => !x.Subscriptions.First().IsCustomData);
+                if (allQuantConnectData && algorithm.StartDate < new DateTime(1998, 01, 01))
+                {
+                    var noTradeableDatesErrorMessage = @"Sorry the algorithm start date specified was too early. The QuantConnect data library starts January 1st, 1998.";
+                    return new UnsuccessfulAnalysis(noTradeableDatesErrorMessage);
+                }
+
+                Unload();
+
+                return success;
+            }
+            catch (Exception err)
+            {
+                failureMessage = "Error initializing algorithm for backtest check: " + err.Message;
+                Log.Error(failureMessage);
+                return new UnsuccessfulAnalysis(failureMessage);
+            }
+        }
+
+        /// <summary>
+        /// Get the tradable dates for the algorithm
+        /// </summary>
+        /// <param name="algorithm">The <see cref="IAlgorithm"/> instance</param>
+        /// <param name="result">The working result that contains the tradable dates</param>
+        /// <returns>An <see cref="AnalysisResultBase"/></returns>
+        private AnalysisResultBase GetTradableSecurities(IAlgorithm algorithm, SuccessfulAnalysis result)
+        {
+            string failureMessage;
+            if (algorithm.Securities.Count == 0)
+            {
+                failureMessage =
+                    "Count not detect any assets/securities. Make sure you are adding at least one security with the AddSecurity Method";
+            }
+            else
+            {
+                failureMessage = "There were no tradeable days in the period selected (" +
+                                 result.PeriodStart.ToShortDateString() + "," + result.PeriodEnd.ToShortDateString() + ")";
+            }
+
+            return new UnsuccessfulAnalysis(failureMessage);
+        }
+
+        /// <summary>
+        /// Extracts the errors from the initialize method
+        /// </summary>
+        /// <param name="historyProviderStub">The <see cref="HistoryProviderStub"/></param>
+        /// <param name="algorithm">The <see cref="IAlgorithm"/> being analyzed</param>
+        /// <returns>An <see cref="AnalysisResultBase"/></returns>
+        private AnalysisResultBase GetAlgorithmInitializeErrors(HistoryProviderStub historyProviderStub,
+            IAlgorithm algorithm)
+        {
+            var errorMessage = new List<string>();
+            if (historyProviderStub.WasUsed)
+            {
+                errorMessage.Add(
+                    "Error initializing algorithm: This may be because history is using fake data while pre-analyzing an algorithm for a backtest");
+            }
+            foreach (var error in algorithm.ErrorMessages)
+            {
+                Log.Error("Loader.GetAlgorithmInitializeErrors(): User error messages: " + error);
+                errorMessage.Add("Error initializing algorithm: " + error);
+            }
+
+            return new UnsuccessfulAnalysis(errorMessage);
+        }
+
+        /// <summary>
+        /// Verify the requested warmup period isn't too large.
+        /// Adds an error message to algorithm in event it is too large
+        /// </summary>
+        public void CheckWarmupPeriod(IAlgorithm algorithm)
+        {
+            var warmupHistoryRequests = algorithm.GetWarmupHistoryRequests();
+            var barCount = warmupHistoryRequests.Sum(request =>
+            {
+                var resolution = request.Resolution.ToTimeSpan();
+                var barSize = resolution == TimeSpan.Zero ? Time.OneSecond : resolution;
+                var localEndTime = request.EndTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
+                var localStartTime = request.StartTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
+
+                // enumerate the bars within the requested range and count the ones within market hours
+                return LinqExtensions
+                    .Range(localStartTime, localEndTime, current => current + barSize, true)
+                    .Count(current => request.ExchangeHours.IsOpen(current, current + barSize, request.IncludeExtendedMarketHours));
+            });
+
+            // limit bars to 100k
+            if (barCount > 100000)
+            {
+                algorithm.ErrorMessages.Enqueue("The requested warmup period is too large. Warmup requests are limited to 100,000 points in total.");
+            }
+        }
 
         /// <summary>
         /// Unload this factory's appDomain.

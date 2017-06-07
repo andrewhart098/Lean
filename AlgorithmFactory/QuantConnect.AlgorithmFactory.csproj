@@ -52,6 +52,8 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Analyze\AnaylzeResult.cs" />
+    <Compile Include="HistoryProviderStub.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Python\Wrappers\AlgorithmPythonWrapper.cs" />
