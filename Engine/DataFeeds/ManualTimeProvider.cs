@@ -16,6 +16,7 @@
 
 using System;
 using NodaTime;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

@@ -13,11 +13,12 @@
  * limitations under the License.
  *
 */
+
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect
 {
     /// <summary>
     /// Transport type for algorithm update data. This is intended to provide a

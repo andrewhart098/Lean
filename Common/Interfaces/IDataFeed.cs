@@ -14,17 +14,13 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
-using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Datafeed interface for creating custom datafeed sources.

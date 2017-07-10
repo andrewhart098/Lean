@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {

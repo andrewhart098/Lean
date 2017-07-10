@@ -16,7 +16,7 @@
 
 using System;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Provides access to the current time in UTC. This doesn't necessarily

@@ -22,7 +22,9 @@ using QuantConnect.Data;
 using QuantConnect.Data.Custom;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Engine.DataFeeds

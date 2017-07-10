@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {

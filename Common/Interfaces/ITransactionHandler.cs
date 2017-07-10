@@ -16,12 +16,10 @@
 
 using System.Collections.Concurrent;
 using System.ComponentModel.Composition;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.TransactionHandlers
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Transaction handlers define how the transactions are processed and set the order fill information.

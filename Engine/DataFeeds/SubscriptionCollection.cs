@@ -18,6 +18,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {

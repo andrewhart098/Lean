@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 

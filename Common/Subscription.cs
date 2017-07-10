@@ -22,7 +22,7 @@ using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect
 {
     /// <summary>
     /// Represents the data required for a data feed to process a single subsciption

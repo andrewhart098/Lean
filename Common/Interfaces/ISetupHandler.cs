@@ -17,13 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.RealTime;
-using QuantConnect.Lean.Engine.Results;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Packets;
 
-namespace QuantConnect.Lean.Engine.Setup
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Interface to setup the algorithm. Pass in a raw algorithm, return one with portfolio, cash, etc already preset.

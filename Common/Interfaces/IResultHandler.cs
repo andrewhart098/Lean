@@ -18,15 +18,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Lean.Engine.Setup;
-using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Statistics;
 
-namespace QuantConnect.Lean.Engine.Results
+namespace QuantConnect.Interfaces
 {
     /// <summary>
     /// Handle the results of the backtest: where should we send the profit, portfolio updates:

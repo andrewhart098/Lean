@@ -20,10 +20,11 @@ using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
-namespace QuantConnect.Lean.Engine.DataFeeds
+namespace QuantConnect
 {
     /// <summary>
     /// Represents a grouping of data emitted at a certain time.

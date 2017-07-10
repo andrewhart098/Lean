@@ -5,6 +5,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm.Examples;
 using QuantConnect.Brokerages;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Packets;
