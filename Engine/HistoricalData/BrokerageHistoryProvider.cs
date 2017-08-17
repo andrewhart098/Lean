@@ -86,15 +86,19 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// </summary>
         private static Subscription CreateSubscription(HistoryRequest request, IEnumerable<BaseData> history)
         {
+            var marketHours = MarketHoursDatabase.FromDataFolder();
+            var exchangeHours = marketHours.GetExchangeHours(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
+            var dataTimeZone = marketHours.GetDataTimeZone(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
+
             // data reader expects these values in local times
-            var start = request.StartTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
-            var end = request.EndTimeUtc.ConvertFromUtc(request.ExchangeHours.TimeZone);
+            var start = request.StartTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
+            var end = request.EndTimeUtc.ConvertFromUtc(exchangeHours.TimeZone);
 
             var config = new SubscriptionDataConfig(request.DataType,
                 request.Symbol,
                 request.Resolution,
-                request.TimeZone,
-                request.ExchangeHours.TimeZone,
+                dataTimeZone,
+                exchangeHours.TimeZone,
                 request.FillForwardResolution.HasValue,
                 request.IncludeExtendedMarketHours,
                 false,
@@ -104,7 +108,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.DataNormalizationMode
                 );
 
-            var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(exchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             var reader = history.GetEnumerator();
 

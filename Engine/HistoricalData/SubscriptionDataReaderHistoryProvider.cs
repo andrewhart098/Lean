@@ -90,15 +90,19 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         /// </summary>
         private Subscription CreateSubscription(HistoryRequest request, DateTime start, DateTime end)
         {
+            var marketHours = MarketHoursDatabase.FromDataFolder();
+            var exchangeHours = marketHours.GetExchangeHours(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
+            var dataTimeZone = marketHours.GetDataTimeZone(request.Symbol.ID.Market, request.Symbol, request.Symbol.SecurityType);
+
             // data reader expects these values in local times
-            start = start.ConvertFromUtc(request.ExchangeHours.TimeZone);
-            end = end.ConvertFromUtc(request.ExchangeHours.TimeZone);
+            start = start.ConvertFromUtc(exchangeHours.TimeZone);
+            end = end.ConvertFromUtc(exchangeHours.TimeZone);
 
             var config = new SubscriptionDataConfig(request.DataType, 
                 request.Symbol, 
                 request.Resolution, 
-                request.TimeZone, 
-                request.ExchangeHours.TimeZone, 
+                dataTimeZone, 
+                exchangeHours.TimeZone, 
                 request.FillForwardResolution.HasValue, 
                 request.IncludeExtendedMarketHours, 
                 false, 
@@ -108,7 +112,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 request.DataNormalizationMode
                 );
 
-            var security = new Security(request.ExchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var security = new Security(exchangeHours, config, new Cash(CashBook.AccountCurrency, 0, 1m), SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             IEnumerator<BaseData> reader = new SubscriptionDataReader(config, 
                 start, 
@@ -117,7 +121,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 config.SecurityType == SecurityType.Equity ? _mapFileProvider.Get(config.Market) : MapFileResolver.Empty, 
                 _factorFileProvider,
                 _dataProvider,
-                Time.EachTradeableDay(request.ExchangeHours, start, end), 
+                Time.EachTradeableDay(exchangeHours, start, end), 
                 false,
                 _dataCacheProvider,
                 false

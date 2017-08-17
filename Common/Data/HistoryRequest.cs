@@ -42,11 +42,6 @@ namespace QuantConnect.Data
         public Symbol Symbol { get; set; }
 
         /// <summary>
-        /// Gets the exchange hours used for processing fill forward requests
-        /// </summary>
-        public SecurityExchangeHours ExchangeHours { get; set; }
-
-        /// <summary>
         /// Gets the requested data resolution
         /// </summary>
         public Resolution Resolution { get; set; }
@@ -67,11 +62,6 @@ namespace QuantConnect.Data
         public Type DataType { get; set; }
 
         /// <summary>
-        /// Gets the time zone of the time stamps on the raw input data
-        /// </summary>
-        public DateTimeZone TimeZone { get; set; }
-
-        /// <summary>
         /// Gets true if this is a custom data request, false for normal QC data
         /// </summary>
         public bool IsCustomData { get; set; }
@@ -88,12 +78,10 @@ namespace QuantConnect.Data
         {
             StartTimeUtc = EndTimeUtc = DateTime.UtcNow;
             Symbol = Symbol.Empty;
-            ExchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork);
             Resolution = Resolution.Minute;
             FillForwardResolution = Resolution.Minute;
             IncludeExtendedMarketHours = false;
             DataType = typeof (TradeBar);
-            TimeZone = TimeZones.NewYork;
             IsCustomData = false;
             DataNormalizationMode = DataNormalizationMode.Adjusted;
         }
@@ -116,7 +104,6 @@ namespace QuantConnect.Data
             Type dataType,
             Symbol symbol,
             Resolution resolution,
-            SecurityExchangeHours exchangeHours,
             Resolution? fillForwardResolution,
             bool includeExtendedMarketHours,
             bool isCustomData,
@@ -126,36 +113,31 @@ namespace QuantConnect.Data
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
             Symbol = symbol;
-            ExchangeHours = exchangeHours;
             Resolution = resolution;
             FillForwardResolution = fillForwardResolution;
             IncludeExtendedMarketHours = includeExtendedMarketHours;
             DataType = dataType;
             IsCustomData = isCustomData;
             DataNormalizationMode = dataNormalizationMode;
-            TimeZone = exchangeHours.TimeZone;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HistoryRequest"/> class from the specified config and exchange hours
         /// </summary>
         /// <param name="config">The subscription data config used to initalize this request</param>
-        /// <param name="hours">The exchange hours used for fill forward processing</param>
         /// <param name="startTimeUtc">The start time for this request,</param>
         /// <param name="endTimeUtc">The start time for this request</param>
-        public HistoryRequest(SubscriptionDataConfig config, SecurityExchangeHours hours, DateTime startTimeUtc, DateTime endTimeUtc)
+        public HistoryRequest(SubscriptionDataConfig config, DateTime startTimeUtc, DateTime endTimeUtc)
         {
             StartTimeUtc = startTimeUtc;
             EndTimeUtc = endTimeUtc;
             Symbol = config.Symbol;
-            ExchangeHours = hours;
             Resolution = config.Resolution;
             FillForwardResolution = config.FillDataForward ? config.Resolution : (Resolution?) null;
             IncludeExtendedMarketHours = config.ExtendedMarketHours;
             DataType = config.Type;
             IsCustomData = config.IsCustomData;
             DataNormalizationMode = config.DataNormalizationMode;
-            TimeZone = config.DataTimeZone;
         }
     }
 }

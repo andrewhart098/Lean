@@ -461,8 +461,7 @@ namespace QuantConnect.Algorithm
                 DataType = subscriptionDataConfig != null ? subscriptionDataConfig.Type : typeof(TradeBar),
                 Resolution = resolution,
                 FillForwardResolution = resolution,
-                Symbol = security.Symbol,
-                ExchangeHours = security.Exchange.Hours
+                Symbol = security.Symbol
             };
 
             var history = History(new List<HistoryRequest> { request });
@@ -557,7 +556,7 @@ namespace QuantConnect.Algorithm
             // find the correct data type for the history request
             var dataType = subscription.IsCustomData ? subscription.Type : LeanData.GetDataType(resolution.Value, subscription.TickType);
 
-            var request = new HistoryRequest(subscription, security.Exchange.Hours, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
+            var request = new HistoryRequest(subscription, startAlgoTz.ConvertToUtc(TimeZone), endAlgoTz.ConvertToUtc(TimeZone))
             {
                 DataType = dataType,
                 Resolution = resolution.Value,

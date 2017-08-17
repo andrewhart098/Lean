@@ -117,8 +117,7 @@ namespace QuantConnect.Securities
                     FillForwardResolution = Resolution.Daily,
                     IncludeExtendedMarketHours = true,
                     Symbol = security.Symbol,
-                    DataType = typeof(TradeBar),
-                    TimeZone = security.Exchange.TimeZone
+                    DataType = typeof(TradeBar)
                 }
             };
         }
