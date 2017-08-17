@@ -73,18 +73,24 @@ namespace QuantConnect.Tests.Common.Securities
 
             _algo.HistoryProvider = historyProvider;
 
-            _tradeBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                                        _tradeBarConfig,
-                                        new Cash(CashBook.AccountCurrency, 0, 1m),
-                                        SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var marketHours = MarketHoursDatabase.FromDataFolder();
 
-            _quoteBarSecurity = new Security(SecurityExchangeHours.AlwaysOpen(DateTimeZone.Utc),
-                                    _quoteBarConfig,
-                                    new Cash(CashBook.AccountCurrency, 0, 1m),
-                                    SymbolProperties.GetDefault(CashBook.AccountCurrency));
+            var tradeBarExchangeHours = marketHours.GetExchangeHours(_tradeBarConfig.Market, _tradeBarConfig.Symbol, _tradeBarConfig.SecurityType);
+
+            _tradeBarSecurity = new Security(tradeBarExchangeHours,
+                _tradeBarConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
+
+            var quoteBarExchangeHours = marketHours.GetExchangeHours(_quoteBarConfig.Market, _quoteBarConfig.Symbol, _quoteBarConfig.SecurityType);
+
+            _quoteBarSecurity = new Security(quoteBarExchangeHours,
+                _quoteBarConfig,
+                new Cash(CashBook.AccountCurrency, 0, 1m),
+                SymbolProperties.GetDefault(CashBook.AccountCurrency));
 
             _brokerageInitializer = new BrokerageModelSecurityInitializer(new DefaultBrokerageModel(),
-                                                                             new FuncSecuritySeeder(_algo.GetLastKnownPrice));
+                new FuncSecuritySeeder(_algo.GetLastKnownPrice));
         }
 
         [Test]
